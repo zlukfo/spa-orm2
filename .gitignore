@@ -1,0 +1,26 @@
+# Контекст разработки — рабочие заметки, в репозиторий не попадают
+context.md
+
+# Редакторы и IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ОС
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.bak
+*.orig
+
+# Зависимости и сборка (на случай появления тулинга)
+node_modules/
+dist/
+build/
+.cache/
