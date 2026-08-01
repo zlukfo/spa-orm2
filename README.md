@@ -4,17 +4,24 @@
 
 ## Открыть в браузере
 
+Работает сразу, без настройки репозитория:
+
+**https://htmlpreview.github.io/?https://github.com/zlukfo/spa-orm2/blob/main/orm2-viewer-barker-er-v3.html**
+
+Основной адрес — после включения GitHub Pages (см. ниже):
+
 **https://zlukfo.github.io/spa-orm2/**
 
-Прямая ссылка на файл: https://zlukfo.github.io/spa-orm2/orm2-viewer-barker-er-v3.html
-
-> Ссылка вида `github.com/zlukfo/spa-orm2/blob/main/orm2-viewer-barker-er-v3.html` показывает **исходный код**, а не работающую страницу: GitHub отдаёт файлы из репозитория как текст. Чтобы HTML исполнялся браузером, нужен хостинг статики — GitHub Pages (см. настройку ниже).
+> Ссылка вида `github.com/zlukfo/spa-orm2/blob/main/orm2-viewer-barker-er-v3.html` показывает **исходный код**, а не работающую страницу: GitHub отдаёт файлы репозитория с типом `text/plain`, браузер их не исполняет. Чтобы HTML открывался как приложение, нужен хостинг статики.
 
 ### Включить GitHub Pages
 
-Один раз в настройках репозитория: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `/ (root)` → Save**.
+Один раз в настройках репозитория: **Settings → Pages → Build and deployment → Source: `Deploy from a branch` → Branch: `main`, папка `/ (root)` → Save**.
 
-Через минуту-две сайт поднимется по адресу выше.
+Через 1–2 минуты заработают адреса:
+
+* https://zlukfo.github.io/spa-orm2/
+* https://zlukfo.github.io/spa-orm2/orm2-viewer-barker-er-v3.html
 
 ## Локальный запуск
 
