@@ -1,0 +1,7614 @@
+
+    const svgNs = 'http://www.w3.org/2000/svg';
+
+    const EMPTY_ORM = `<?xml version="1.0" encoding="utf-8"?>
+<ormRoot:ORM2 xmlns:orm="http://schemas.neumont.edu/ORM/2006-04/ORMCore"
+              xmlns:ormDiagram="http://schemas.neumont.edu/ORM/2006-04/ORMDiagram"
+              xmlns:ormRoot="http://schemas.neumont.edu/ORM/2006-04/ORMRoot">
+  <orm:ORMModel id="model1" Name="NewModel">
+    <orm:Objects></orm:Objects>
+    <orm:Facts></orm:Facts>
+    <orm:Constraints></orm:Constraints>
+    <orm:DataTypes>
+      <orm:UnspecifiedDataType id="arena_unspecified_dt" />
+      <orm:FixedLengthTextDataType id="arena_fixed_text_dt" />
+      <orm:SignedIntegerNumericDataType id="arena_integer_dt" />
+      <orm:AutoCounterNumericDataType id="arena_autocounter_dt" />
+    </orm:DataTypes>
+  </orm:ORMModel>
+  <ormDiagram:ORMDiagram id="diag1" Name="NewModel" IsCompleteView="false" BaseFontName="Tahoma" BaseFontSize="0.0972222238779068">
+    <ormDiagram:Shapes></ormDiagram:Shapes>
+    <ormDiagram:Subject ref="model1" />
+  </ormDiagram:ORMDiagram>
+</ormRoot:ORM2>`;
+
+    const state = {
+      model: null,
+      zoom: 1,
+      search: '',
+      notationMode: 'orm',
+      constraintFilter: 'all',
+      strictNormaExport: true,
+      xmlPreviewMode: 'export',
+      barkerAbsorbValueTypes: true,
+      barkerShowRoleLabels: true,
+      rulesPanelCollapsed: false,
+      rulesPanelWidth: 420,
+      rulesResizeInfo: null,
+      sidePanelCollapsed: false,
+      sidePanelWidth: 420,
+      sideResizeInfo: null,
+      editorMode: 'select',
+      pendingFactObjectRefs: [],
+      lastDiagramMetrics: null,
+      diagramTransform: null,
+      selectedRoleRefs: [],
+      selectionBreaks: [],
+      selectedConstraintId: null,
+      businessRuleFocusElement: null,
+      selectedElement: null,
+      multiSelectedElements: [],
+      generatedConstraintCounter: 0,
+      dragInfo: null,
+      panInfo: null,
+      marqueeInfo: null,
+      suppressNextCanvasClick: false,
+      contextMenuTarget: null,
+      history: [],
+      future: []
+    };
+
+    const elements = {
+      fileInput: document.getElementById('fileInput'),
+      filePickerLabel: document.getElementById('filePickerLabel'),
+      rulesToggleBtn: document.getElementById('rulesToggleBtn'),
+      sideToggleBtn: document.getElementById('sideToggleBtn'),
+      createBtn: document.getElementById('createBtn'),
+      saveBtn: document.getElementById('saveBtn'),
+      normaReportBtn: document.getElementById('normaReportBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      xmlBtn: document.getElementById('xmlBtn'),
+      closeXmlBtn: document.getElementById('closeXmlBtn'),
+      xmlDrawer: document.getElementById('xmlDrawer'),
+      xmlDrawerTitle: document.getElementById('xmlDrawerTitle'),
+      showExportXmlBtn: document.getElementById('showExportXmlBtn'),
+      showSourceXmlBtn: document.getElementById('showSourceXmlBtn'),
+      showValidationReportBtn: document.getElementById('showValidationReportBtn'),
+      notationMode: document.getElementById('notationMode'),
+      zoomSelect: document.getElementById('zoomSelect'),
+      selectModeBtn: document.getElementById('selectModeBtn'),
+      panModeBtn: document.getElementById('panModeBtn'),
+      constraintFilter: document.getElementById('constraintFilter'),
+      addEntityBtn: document.getElementById('addEntityBtn'),
+      addValueBtn: document.getElementById('addValueBtn'),
+      addUnaryFactBtn: document.getElementById('addUnaryFactBtn'),
+      addFactBtn: document.getElementById('addFactBtn'),
+      addTernaryFactBtn: document.getElementById('addTernaryFactBtn'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn'),
+      exportSvgBtn: document.getElementById('exportSvgBtn'),
+      exportPngBtn: document.getElementById('exportPngBtn'),
+      exportDropdown: document.getElementById('exportDropdown'),
+      exportSvgMenuBtn: document.getElementById('exportSvgMenuBtn'),
+      exportPngMenuBtn: document.getElementById('exportPngMenuBtn'),
+      diagramSearch: document.getElementById('diagramSearch'),
+      splitPathBtn: document.getElementById('splitPathBtn'),
+      clearSelectionBtn: document.getElementById('clearSelectionBtn'),
+      constraintEditorMode: document.getElementById('constraintEditorMode'),
+      constraintWizardType: document.getElementById('constraintWizardType'),
+      constraintWizardHint: document.getElementById('constraintWizardHint'),
+      createConstraintBtn: document.getElementById('createConstraintBtn'),
+      barkerAbsorbValueTypesWrap: document.getElementById('barkerAbsorbValueTypesWrap'),
+      barkerAbsorbValueTypesChk: document.getElementById('barkerAbsorbValueTypesChk'),
+      barkerShowRoleLabelsWrap: document.getElementById('barkerShowRoleLabelsWrap'),
+      barkerShowRoleLabelsChk: document.getElementById('barkerShowRoleLabelsChk'),
+      barkerLossPanel: document.getElementById('barkerLossPanel'),
+      frequencyConfigRow: document.getElementById('frequencyConfigRow'),
+      minFreqInput: document.getElementById('minFreqInput'),
+      maxFreqInput: document.getElementById('maxFreqInput'),
+      constraintNameInput: document.getElementById('constraintNameInput'),
+      preferredConstraintChk: document.getElementById('preferredConstraintChk'),
+      applyConstraintEditBtn: document.getElementById('applyConstraintEditBtn'),
+      deleteConstraintBtn: document.getElementById('deleteConstraintBtn'),
+      selectedRoles: document.getElementById('selectedRoles'),
+      constraintEditor: document.getElementById('constraintEditor'),
+      contextMenu: document.getElementById('contextMenu'),
+      propertiesPanel: document.getElementById('propertiesPanel'),
+      propertiesContent: document.getElementById('propertiesContent'),
+      workspace: document.querySelector('.workspace'),
+      rulesScroll: document.getElementById('rulesScroll'),
+      status: document.getElementById('status'),
+      diagramTitle: document.getElementById('diagramTitle'),
+      diagramMeta: document.getElementById('diagramMeta'),
+      businessRulesMeta: document.getElementById('businessRulesMeta'),
+      saveBusinessRulesBtn: document.getElementById('saveBusinessRulesBtn'),
+      businessRulesInput: document.getElementById('businessRulesInput'),
+      businessRulesDiagnostics: document.getElementById('businessRulesDiagnostics'),
+      businessRulesPreview: document.getElementById('businessRulesPreview'),
+      applyBusinessRulesBtn: document.getElementById('applyBusinessRulesBtn'),
+      summary: document.getElementById('summary'),
+      businessRulesPanel: document.getElementById('businessRulesPanel'),
+      sourcePreview: document.getElementById('sourcePreview'),
+      diagramSvg: document.getElementById('diagramSvg'),
+      diagramStage: document.getElementById('diagramStage'),
+      diagramViewport: document.getElementById('diagramViewport'),
+      rulesResizeHandle: document.getElementById('rulesResizeHandle'),
+      sideResizeHandle: document.getElementById('sideResizeHandle'),
+      diagramEmpty: document.getElementById('diagramEmpty')
+    };
+
+    elements.fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      loadOrmText(text, file.name);
+    });
+
+    elements.createBtn.addEventListener('click', () => createNewDiagram());
+    elements.saveBtn.addEventListener('click', downloadCurrentOrm);
+    elements.normaReportBtn.addEventListener('click', downloadNormaCompatibilityReport);
+    elements.rulesToggleBtn.addEventListener('click', toggleRulesPanel);
+    elements.sideToggleBtn.addEventListener('click', toggleSidePanel);
+    elements.rulesResizeHandle.addEventListener('mousedown', startRulesResize);
+    elements.sideResizeHandle.addEventListener('mousedown', startSideResize);
+
+    elements.clearBtn.addEventListener('click', () => {
+      state.model = null;
+      state.search = '';
+      state.editorMode = 'select';
+      state.lastDiagramMetrics = null;
+      state.diagramTransform = null;
+      state.selectedRoleRefs = [];
+      state.selectionBreaks = [];
+      state.selectedConstraintId = null;
+      state.selectedElement = null;
+      state.multiSelectedElements = [];
+      state.pendingFactObjectRefs = [];
+      state.dragInfo = null;
+      state.rulesResizeInfo = null;
+      state.sideResizeInfo = null;
+      state.panInfo = null;
+      state.marqueeInfo = null;
+      state.suppressNextCanvasClick = false;
+      state.contextMenuTarget = null;
+      state.generatedConstraintCounter = 0;
+      state.history = [];
+      state.future = [];
+      elements.fileInput.value = '';
+      elements.filePickerLabel.textContent = 'Выберите .orm файл для просмотра…';
+      elements.diagramSearch.value = '';
+      elements.businessRulesInput.value = '';
+      clearUi();
+      setStatus('Ожидание загрузки файла…');
+    });
+
+    elements.xmlBtn.addEventListener('click', () => {
+      state.xmlPreviewMode = 'export';
+      refreshXmlPreview();
+      toggleXmlDrawer(true);
+    });
+    elements.showExportXmlBtn.addEventListener('click', () => {
+      state.xmlPreviewMode = 'export';
+      refreshXmlPreview();
+      toggleXmlDrawer(true);
+    });
+    elements.showSourceXmlBtn.addEventListener('click', () => {
+      state.xmlPreviewMode = 'source';
+      refreshXmlPreview();
+      toggleXmlDrawer(true);
+    });
+    elements.showValidationReportBtn.addEventListener('click', () => {
+      state.xmlPreviewMode = 'report';
+      refreshXmlPreview();
+      toggleXmlDrawer(true);
+    });
+    elements.closeXmlBtn.addEventListener('click', () => toggleXmlDrawer(false));
+    elements.notationMode.addEventListener('change', () => {
+      state.notationMode = elements.notationMode.value || 'orm';
+      updateBarkerHeaderControlsVisibility();
+      if (state.model) renderModel(state.model);
+    });
+
+    elements.zoomSelect.addEventListener('change', () => {
+      state.zoom = Number(elements.zoomSelect.value) || 1;
+      applyDiagramZoom();
+    });
+
+    elements.constraintFilter.addEventListener('change', () => {
+      state.constraintFilter = elements.constraintFilter.value || 'all';
+      applySearchState();
+    });
+
+    elements.diagramSearch.addEventListener('input', () => {
+      state.search = elements.diagramSearch.value.trim().toLowerCase();
+      applySearchState();
+    });
+
+    elements.splitPathBtn.addEventListener('click', addSelectionBreak);
+    elements.clearSelectionBtn.addEventListener('click', clearRoleSelection);
+    elements.constraintEditorMode.addEventListener('change', renderConstraintEditorState);
+    elements.constraintWizardType.addEventListener('change', renderConstraintEditorState);
+    elements.createConstraintBtn.addEventListener('click', createConstraintFromWizard);
+    elements.applyConstraintEditBtn.addEventListener('click', applySelectedConstraintEdits);
+    elements.deleteConstraintBtn.addEventListener('click', deleteSelectedConstraint);
+
+    elements.selectModeBtn.addEventListener('click', () => setEditorMode('select'));
+    elements.panModeBtn.addEventListener('click', () => setEditorMode('pan'));
+    elements.addEntityBtn.addEventListener('click', () => setEditorMode('addEntity'));
+    elements.addValueBtn.addEventListener('click', () => setEditorMode('addValue'));
+    elements.addUnaryFactBtn.addEventListener('click', () => setEditorMode('addUnaryFact'));
+    elements.addFactBtn.addEventListener('click', () => setEditorMode('addBinaryFact'));
+    elements.addTernaryFactBtn.addEventListener('click', () => setEditorMode('addTernaryFact'));
+    elements.undoBtn.addEventListener('click', undoEdit);
+    elements.redoBtn.addEventListener('click', redoEdit);
+    elements.exportSvgBtn.addEventListener('click', exportCurrentSvg);
+    elements.exportPngBtn.addEventListener('click', exportCurrentPng);
+    if (elements.exportSvgMenuBtn) {
+      elements.exportSvgMenuBtn.addEventListener('click', () => {
+        exportCurrentSvg();
+        if (elements.exportDropdown) elements.exportDropdown.open = false;
+      });
+    }
+    if (elements.exportPngMenuBtn) {
+      elements.exportPngMenuBtn.addEventListener('click', () => {
+        exportCurrentPng();
+        if (elements.exportDropdown) elements.exportDropdown.open = false;
+      });
+    }
+    elements.barkerAbsorbValueTypesChk.addEventListener('change', () => {
+      state.barkerAbsorbValueTypes = !!elements.barkerAbsorbValueTypesChk.checked;
+      if (state.model && state.notationMode === 'barker') renderModel(state.model);
+    });
+    elements.barkerShowRoleLabelsChk.addEventListener('change', () => {
+      state.barkerShowRoleLabels = !!elements.barkerShowRoleLabelsChk.checked;
+      if (state.model && state.notationMode === 'barker') renderModel(state.model);
+    });
+    elements.saveBusinessRulesBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      downloadBusinessRulesTxt();
+    });
+    elements.businessRulesInput.addEventListener('input', () => {
+      normalizeBusinessRulesInput();
+      updateBusinessRulesHint();
+      updateBusinessRulesDiagnostics();
+      updateBusinessRulesCurrentLineHighlight();
+    });
+    elements.businessRulesInput.addEventListener('focus', () => {
+      updateBusinessRulesHint();
+      updateBusinessRulesDiagnostics();
+      updateBusinessRulesCurrentLineHighlight();
+    });
+    elements.businessRulesInput.addEventListener('click', () => {
+      updateBusinessRulesHint();
+      updateBusinessRulesDiagnostics();
+      updateBusinessRulesCurrentLineHighlight();
+    });
+    elements.businessRulesInput.addEventListener('keyup', () => {
+      updateBusinessRulesHint();
+      updateBusinessRulesDiagnostics();
+      updateBusinessRulesCurrentLineHighlight();
+    });
+    elements.businessRulesInput.addEventListener('scroll', updateBusinessRulesCurrentLineHighlight);
+    elements.applyBusinessRulesBtn.addEventListener('click', applyBusinessRulesText);
+
+    document.addEventListener('mousemove', handleGlobalPointerMove);
+    document.addEventListener('mouseup', handleGlobalPointerUp);
+    document.addEventListener('mousemove', handleRulesResizeMove);
+    document.addEventListener('mouseup', stopRulesResize);
+    document.addEventListener('mousemove', handleSideResizeMove);
+    document.addEventListener('mouseup', stopSideResize);
+    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleDocumentKeydown);
+    elements.diagramViewport.addEventListener('mousedown', handleViewportMouseDown);
+    elements.diagramViewport.addEventListener('wheel', handleViewportWheel, { passive: false });
+    elements.diagramSvg.addEventListener('click', handleDiagramCanvasClick);
+    elements.diagramSvg.addEventListener('contextmenu', handleDiagramContextMenu);
+
+    function toggleXmlDrawer(open) {
+      elements.xmlDrawer.classList.toggle('is-open', open);
+      elements.xmlDrawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    function setupSettingsAccordionDragAndDrop() {
+      const accordions = Array.from(document.querySelectorAll('.settings-accordion'));
+      accordions.forEach((accordion) => {
+        const summary = accordion.querySelector('summary');
+        if (!summary) return;
+        summary.setAttribute('draggable', 'true');
+
+        summary.addEventListener('dragstart', (event) => {
+          accordion.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', accordion.getAttribute('data-settings-block') || '');
+        });
+
+        summary.addEventListener('dragend', () => {
+          accordion.classList.remove('dragging');
+        });
+
+        accordion.addEventListener('dragover', (event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+        });
+
+        accordion.addEventListener('drop', (event) => {
+          event.preventDefault();
+          const dragging = document.querySelector('.settings-accordion.dragging');
+          if (!dragging || dragging === accordion) return;
+          const bounds = accordion.getBoundingClientRect();
+          const before = event.clientY < bounds.top + bounds.height / 2;
+          const parent = accordion.parentNode;
+          if (before) parent.insertBefore(dragging, accordion);
+          else parent.insertBefore(dragging, accordion.nextSibling);
+        });
+      });
+    }
+
+    function applyRussianTooltips(root = document) {
+      const titleById = {
+        fileInput: 'Выберите ORM-файл для открытия в редакторе',
+        createBtn: 'Создать новую пустую диаграмму ORM',
+        saveBtn: 'Сохранить текущую модель в файл ORM',
+        normaReportBtn: 'Скачать текстовый отчёт о структуре и проверках ORM-модели',
+        rulesToggleBtn: 'Скрыть или показать левую панель бизнес-правил',
+        clearBtn: 'Очистить текущую модель и интерфейс',
+        xmlBtn: 'Показать XML, который будет сохранён, или исходный XML',
+        showExportXmlBtn: 'Показать точный XML, который будет сохранён в файл',
+        showSourceXmlBtn: 'Показать исходный XML, который был загружен',
+        showValidationReportBtn: 'Показать текстовый отчёт проверки ORM-модели',
+        notationMode: 'Выберите нотацию отображения диаграммы: ORM или Barker ER',
+        barkerAbsorbValueTypesChk: 'Переключить отображение ValueType как атрибутов в нотации Barker ER',
+        barkerShowRoleLabelsChk: 'Показывать или скрывать подписи ролей в нотации Barker ER',
+        zoomSelect: 'Изменить масштаб отображения диаграммы',
+        constraintFilter: 'Фильтр отображения uniqueness, mandatory и external constraints',
+        diagramSearch: 'Поиск по именам объектов, фактов и чтений',
+        selectModeBtn: 'Режим выбора и редактирования элементов схемы',
+        panModeBtn: 'Режим перемещения схемы как рукой',
+        addEntityBtn: 'Добавить новый entity type',
+        addValueBtn: 'Добавить новый value type',
+        addUnaryFactBtn: 'Создать новый унарный факт для одного объекта',
+        addFactBtn: 'Создать новый бинарный факт между двумя объектами',
+        addTernaryFactBtn: 'Создать новый тернарный факт между тремя объектами',
+        saveBusinessRulesBtn: 'Сохранить бизнес-правила в текстовый файл',
+        businessRulesInput: 'Введите текстовые бизнес-правила и правила вывода, по одному предложению в строке',
+        rulesToggleBtn: 'Скрыть или показать левую панель бизнес-правил',
+        rulesResizeHandle: 'Потяните мышью, чтобы изменить ширину левой панели бизнес-правил',
+        sideResizeHandle: 'Потяните мышью, чтобы изменить ширину правой панели',
+        applyBusinessRulesBtn: 'Разобрать введённые правила и применить изменения к модели',
+        undoBtn: 'Отменить последнее действие',
+        redoBtn: 'Повторить отменённое действие',
+        exportSvgBtn: 'Экспортировать диаграмму в SVG',
+        exportPngBtn: 'Экспортировать диаграмму в PNG',
+        splitPathBtn: 'Разделить выбранные роли на группы или части join-path',
+        clearSelectionBtn: 'Сбросить выбранные роли для создания ограничений',
+        constraintEditorMode: 'Выберите простой или расширенный режим мастера ограничений',
+        constraintWizardType: 'Выберите тип ограничения, подходящий для текущего набора ролей',
+        createConstraintBtn: 'Создать ограничение выбранного типа для текущего набора ролей',
+        minFreqInput: 'Минимальная частота для внешнего частотного ограничения',
+        maxFreqInput: 'Максимальная частота для внешнего частотного ограничения',
+        constraintNameInput: 'Имя выбранного ограничения',
+        preferredConstraintChk: 'Сделать выбранное ограничение preferred',
+        applyConstraintEditBtn: 'Применить изменения к выбранному ограничению',
+        deleteConstraintBtn: 'Удалить выбранное ограничение',
+        sideToggleBtn: 'Скрыть или показать правую боковую панель',
+        closeXmlBtn: 'Закрыть панель исходного XML'
+      };
+
+      root.querySelectorAll('button, input, select, textarea, label').forEach((el) => {
+        if (el.getAttribute('title')) return;
+        if (el.id && titleById[el.id]) {
+          el.setAttribute('title', titleById[el.id]);
+          return;
+        }
+        const forId = el.getAttribute('for');
+        if (forId && titleById[forId]) {
+          el.setAttribute('title', titleById[forId]);
+          return;
+        }
+        const text = (el.textContent || '').trim();
+        const placeholder = el.getAttribute('placeholder') || '';
+        const fallback = text || placeholder;
+        if (fallback) {
+          el.setAttribute('title', `Элемент интерфейса: ${fallback}`);
+        }
+      });
+    }
+
+    function toggleRulesPanel() {
+      state.rulesPanelCollapsed = !state.rulesPanelCollapsed;
+      applyRulesPanelState();
+    }
+
+    function applyRulesPanelState() {
+      elements.workspace.classList.toggle('left-collapsed', !!state.rulesPanelCollapsed);
+      elements.workspace.style.setProperty('--rules-width', `${state.rulesPanelWidth || 420}px`);
+      elements.rulesToggleBtn.innerHTML = state.rulesPanelCollapsed ? '&gt;&gt;&gt;' : '&lt;&lt;&lt;';
+      elements.rulesToggleBtn.setAttribute('aria-expanded', state.rulesPanelCollapsed ? 'false' : 'true');
+      elements.rulesToggleBtn.title = state.rulesPanelCollapsed ? 'Показать панель бизнес-правил' : 'Скрыть панель бизнес-правил';
+    }
+
+    function toggleSidePanel() {
+      state.sidePanelCollapsed = !state.sidePanelCollapsed;
+      applySidePanelState();
+    }
+
+    function applySidePanelState() {
+      elements.workspace.classList.toggle('side-collapsed', state.sidePanelCollapsed);
+      elements.workspace.style.setProperty('--side-width', `${state.sidePanelWidth || 420}px`);
+      elements.sideToggleBtn.innerHTML = state.sidePanelCollapsed ? '&lt;&lt;&lt;' : '&gt;&gt;&gt;';
+      elements.sideToggleBtn.setAttribute('aria-expanded', state.sidePanelCollapsed ? 'false' : 'true');
+      elements.sideToggleBtn.title = state.sidePanelCollapsed ? 'Показать правую панель' : 'Скрыть правую панель';
+    }
+
+    function startRulesResize(event) {
+      if (state.rulesPanelCollapsed) return;
+      event.preventDefault();
+      state.rulesResizeInfo = {
+        startX: event.clientX,
+        startWidth: state.rulesPanelWidth || 420
+      };
+    }
+
+    function handleRulesResizeMove(event) {
+      if (!state.rulesResizeInfo) return;
+      const dx = event.clientX - state.rulesResizeInfo.startX;
+      state.rulesPanelWidth = Math.min(700, Math.max(280, state.rulesResizeInfo.startWidth + dx));
+      applyRulesPanelState();
+    }
+
+    function stopRulesResize() {
+      state.rulesResizeInfo = null;
+    }
+
+    function startSideResize(event) {
+      if (state.sidePanelCollapsed) return;
+      event.preventDefault();
+      state.sideResizeInfo = {
+        startX: event.clientX,
+        startWidth: state.sidePanelWidth || 420
+      };
+    }
+
+    function handleSideResizeMove(event) {
+      if (!state.sideResizeInfo) return;
+      const dx = state.sideResizeInfo.startX - event.clientX;
+      state.sidePanelWidth = Math.min(700, Math.max(280, state.sideResizeInfo.startWidth + dx));
+      applySidePanelState();
+    }
+
+    function stopSideResize() {
+      state.sideResizeInfo = null;
+    }
+
+    function updateBusinessRulesCurrentLineHighlight() {
+      const textarea = elements.businessRulesInput;
+      if (!textarea) return;
+      const value = textarea.value || '';
+      if (!value.length) {
+        textarea.style.backgroundImage = 'none';
+        return;
+      }
+      const caret = textarea.selectionStart || 0;
+      const before = value.slice(0, caret);
+      const lineIndex = before.split('\n').length - 1;
+      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 22;
+      const padTop = parseFloat(getComputedStyle(textarea).paddingTop) || 0;
+      const y = padTop + lineIndex * lineHeight;
+      const highlight = 'rgba(255, 242, 184, 0.75)';
+      textarea.style.backgroundImage = `linear-gradient(to bottom, transparent ${Math.max(0, y - 1)}px, ${highlight} ${Math.max(0, y - 1)}px, ${highlight} ${y + lineHeight - 1}px, transparent ${y + lineHeight - 1}px)`;
+    }
+
+    function clearUi() {
+      renderConstraintEditorState();
+      renderPropertiesPanel();
+      applyRulesPanelState();
+      applySidePanelState();
+      elements.constraintNameInput.value = '';
+      elements.preferredConstraintChk.checked = false;
+      elements.minFreqInput.value = '';
+      elements.maxFreqInput.value = '';
+      elements.businessRulesInput.value = '';
+      updateModeButtons();
+      if (elements.summary) {
+        elements.summary.innerHTML = '<div class="summary-line"><span class="summary-label">Модель:</span><span class="summary-badge">Нет данных</span></div>';
+      }
+      elements.businessRulesPanel.innerHTML = '<div class="empty-list">Бизнес-правила пока не сформированы.</div>';
+      elements.businessRulesDiagnostics.innerHTML = '<div class="empty-list">Диагностика правил пока пуста.</div>';
+      elements.businessRulesPreview.innerHTML = '<div class="empty-list">Предпросмотр применения пока пуст.</div>';
+      elements.businessRulesMeta.textContent = '0 rules';
+      if (elements.barkerAbsorbValueTypesChk) elements.barkerAbsorbValueTypesChk.checked = state.barkerAbsorbValueTypes;
+      if (elements.barkerShowRoleLabelsChk) elements.barkerShowRoleLabelsChk.checked = state.barkerShowRoleLabels;
+      if (elements.barkerLossPanel) elements.barkerLossPanel.innerHTML = '<div class="empty-list">Список потерь будет показан после загрузки модели.</div>';
+      updateBarkerHeaderControlsVisibility();
+      updateBusinessRulesCurrentLineHighlight();
+      elements.diagramTitle.textContent = state.notationMode === 'barker' ? 'Диаграмма Barker ER' : 'Диаграмма ORM';
+      elements.diagramMeta.textContent = 'Нет данных';
+      elements.sourcePreview.textContent = 'Файл ещё не загружен.';
+      elements.diagramSvg.innerHTML = '';
+      elements.diagramSvg.removeAttribute('width');
+      elements.diagramSvg.removeAttribute('height');
+      elements.diagramSvg.removeAttribute('viewBox');
+      elements.diagramStage.style.width = '100%';
+      elements.diagramStage.style.height = '100%';
+      elements.diagramEmpty.classList.remove('hidden');
+      toggleXmlDrawer(false);
+    }
+
+    function setStatus(text, isError = false) {
+      elements.status.textContent = text;
+      elements.status.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+    }
+
+    function loadOrmText(rawText, fileName = 'model.orm') {
+      try {
+        const sanitizedText = sanitizeOrmXml(rawText);
+        const xml = parseXml(sanitizedText);
+        const model = buildOrmModel(xml, sanitizedText, fileName);
+        state.model = model;
+        syncGeneratedCounterFromModel(model);
+        state.lastDiagramMetrics = null;
+        state.diagramTransform = null;
+        state.selectedRoleRefs = [];
+        state.selectionBreaks = [];
+        state.selectedConstraintId = null;
+        state.selectedElement = null;
+        state.multiSelectedElements = [];
+        state.pendingFactObjectRefs = [];
+        state.dragInfo = null;
+        state.panInfo = null;
+        state.marqueeInfo = null;
+        state.suppressNextCanvasClick = false;
+        state.contextMenuTarget = null;
+        state.history = [];
+        state.future = [];
+        elements.filePickerLabel.textContent = fileName;
+        renderModel(model);
+        setStatus(`Файл загружен: ${fileName}`);
+      } catch (error) {
+        state.model = null;
+        state.lastDiagramMetrics = null;
+        clearUi();
+        renderError(error.message || 'Не удалось обработать файл.');
+        setStatus('Ошибка загрузки файла', true);
+      }
+    }
+
+    function sanitizeOrmXml(text) {
+      return text
+        .replace(/^\uFEFF/, '')
+        .replace(/\[(https?:\/\/[^\]\s]+)\]\((https?:\/\/[^)\s]+)\)/g, '$1')
+        .replace(/\s\*([A-Za-z_][\w:.-]*=)/g, ' $1')
+        .replace(/"\*(\s|>)/g, '"$1');
+    }
+
+    function parseXml(xmlText) {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'application/xml');
+      const parserError = xml.getElementsByTagName('parsererror')[0];
+      if (parserError) {
+        throw new Error('XML разобран с ошибкой. Проверьте корректность .orm-файла.');
+      }
+      return xml;
+    }
+
+    function buildOrmModel(xml, sourceText, fileName) {
+      const ormModel = Array.from(xml.getElementsByTagName('*')).find((el) => el.localName === 'ORMModel');
+      if (!ormModel) {
+        throw new Error('В файле не найден элемент ORMModel.');
+      }
+
+      const objectsSection = firstChildElement(ormModel, 'Objects');
+      const factsSection = firstChildElement(ormModel, 'Facts');
+      const constraintsSection = firstChildElement(ormModel, 'Constraints');
+      const dataTypesSection = firstChildElement(ormModel, 'DataTypes');
+      const modelErrorsSection = firstChildElement(ormModel, 'ModelErrors');
+      const diagram = Array.from(xml.getElementsByTagName('*')).find((el) => el.localName === 'ORMDiagram');
+
+      const allById = new Map();
+      Array.from(xml.getElementsByTagName('*')).forEach((el) => {
+        const id = el.getAttribute('id');
+        if (id) allById.set(id, el);
+      });
+
+      const dataTypeById = parseDataTypeMap(dataTypesSection);
+      const generatedEntityReferenceMap = parseGeneratedEntityReferenceMap(objectsSection, dataTypeById);
+
+      const objects = [];
+      const objectById = new Map();
+      for (const child of elementChildren(objectsSection)) {
+        if (!['EntityType', 'ValueType', 'ObjectifiedType'].includes(child.localName)) continue;
+        const objectId = child.getAttribute('id');
+        if (isGeneratedReferenceValueTypeId(objectId)) continue;
+        const conceptualDataTypeEl = firstChildElement(child, 'ConceptualDataType');
+        const conceptualDataTypeRef = conceptualDataTypeEl?.getAttribute('ref') || '';
+        const directDataType = dataTypeById.get(conceptualDataTypeRef) || 'UnspecifiedDataType';
+        const generatedRefDataType = generatedEntityReferenceMap.get(objectId)?.dataType || '';
+        const llmDataType = getLlmAttr(child, 'DataType') || '';
+        const parsedRefModes = parseRefModesInput(getLlmAttr(child, 'RefModes') || child.getAttribute('_ReferenceMode') || getLlmAttr(child, 'RefMode') || '');
+        const object = {
+          id: objectId,
+          type: child.localName,
+          name: child.getAttribute('Name') || child.getAttribute('name') || 'Без имени',
+          refModes: parsedRefModes,
+          refMode: parsedRefModes[0] || '',
+          dataType: child.localName === 'EntityType' ? (llmDataType || generatedRefDataType || 'FixedLengthTextDataType') : (llmDataType || directDataType),
+          independent: child.getAttribute('IsIndependent') === 'true',
+          notes: collectNotes(child)
+        };
+        objects.push(object);
+        objectById.set(object.id, object);
+      }
+
+      const facts = [];
+      const factsById = new Map();
+      const roleMeta = new Map();
+      const readingOrderById = new Map();
+
+      for (const factEl of elementChildren(factsSection)) {
+        if (!['Fact', 'ImpliedFact'].includes(factEl.localName)) continue;
+        if (isGeneratedReferenceFactId(factEl.getAttribute('id'))) continue;
+
+        const fact = {
+          id: factEl.getAttribute('id'),
+          type: factEl.localName,
+          name: factEl.getAttribute('_Name') || factEl.getAttribute('Name') || 'Безымянный факт',
+          roles: [],
+          readings: [],
+          internalConstraintRefs: [],
+          uniquenessConstraints: []
+        };
+
+        const factRolesEl = firstChildElement(factEl, 'FactRoles');
+        if (factRolesEl) {
+          for (const roleEl of elementChildren(factRolesEl)) {
+            if (!['Role', 'RoleProxy'].includes(roleEl.localName)) continue;
+
+            let actualRoleId = null;
+            let actualRoleEl = null;
+            const roleId = roleEl.getAttribute('id') || '';
+            const isProxy = roleEl.localName === 'RoleProxy';
+
+            if (isProxy) {
+              const proxyTarget = firstChildElement(roleEl, 'Role');
+              actualRoleId = proxyTarget ? proxyTarget.getAttribute('ref') : null;
+              actualRoleEl = actualRoleId ? allById.get(actualRoleId) : null;
+            } else {
+              actualRoleId = roleEl.getAttribute('id');
+              actualRoleEl = roleEl;
+            }
+
+            const rolePlayerRef = actualRoleEl ? firstDescendant(actualRoleEl, 'RolePlayer')?.getAttribute('ref') || null : null;
+            const roleMandatory = actualRoleEl ? actualRoleEl.getAttribute('IsMandatory') === 'true' : false;
+            const roleMultiplicity = actualRoleEl ? actualRoleEl.getAttribute('Multiplicity') || 'Unspecified' : 'Unspecified';
+            const role = {
+              id: roleId || actualRoleId,
+              actualRoleId,
+              isProxy,
+              factId: fact.id,
+              factRoleIndex: fact.roles.length,
+              playerRef: rolePlayerRef,
+              playerName: rolePlayerRef && objectById.get(rolePlayerRef) ? objectById.get(rolePlayerRef).name : 'Неизвестный объект',
+              IsMandatory: roleMandatory,
+              mandatory: roleMandatory,
+              Multiplicity: roleMultiplicity,
+              multiplicity: roleMultiplicity,
+              name: actualRoleEl ? actualRoleEl.getAttribute('Name') || '' : ''
+            };
+
+            fact.roles.push(role);
+            if (role.id) roleMeta.set(role.id, role);
+            if (actualRoleId && !roleMeta.has(actualRoleId)) roleMeta.set(actualRoleId, role);
+          }
+        }
+
+        const readingOrdersEl = firstChildElement(factEl, 'ReadingOrders');
+        if (readingOrdersEl) {
+          for (const readingOrderEl of elementChildren(readingOrdersEl)) {
+            if (readingOrderEl.localName !== 'ReadingOrder') continue;
+
+            const readingOrder = {
+              id: readingOrderEl.getAttribute('id'),
+              factId: fact.id,
+              roleSequence: [],
+              readings: []
+            };
+
+            const roleSequenceEl = firstChildElement(readingOrderEl, 'RoleSequence');
+            if (roleSequenceEl) {
+              for (const seqRoleEl of elementChildren(roleSequenceEl)) {
+                if (seqRoleEl.localName !== 'Role') continue;
+                const ref = seqRoleEl.getAttribute('ref');
+                if (ref) readingOrder.roleSequence.push(ref);
+              }
+            }
+
+            const readingsEl = firstChildElement(readingOrderEl, 'Readings');
+            if (readingsEl) {
+              for (const readingEl of elementChildren(readingsEl)) {
+                if (readingEl.localName !== 'Reading') continue;
+                const dataEl = firstChildElement(readingEl, 'Data');
+                const template = dataEl ? dataEl.textContent.trim() : '';
+                const roleNames = readingOrder.roleSequence.map((roleRef) => resolveRoleName(roleRef, roleMeta, objectById));
+                const verbalized = verbalize(template, roleNames);
+                readingOrder.readings.push({
+                  id: readingEl.getAttribute('id'),
+                  template,
+                  verbalized,
+                  roleNames
+                });
+              }
+            }
+
+            readingOrderById.set(readingOrder.id, readingOrder);
+            fact.readings.push(readingOrder);
+          }
+        }
+
+        const internalConstraintsEl = firstChildElement(factEl, 'InternalConstraints');
+        if (internalConstraintsEl) {
+          fact.internalConstraintRefs = elementChildren(internalConstraintsEl)
+            .map((constraintEl) => constraintEl.getAttribute('ref'))
+            .filter(Boolean);
+        }
+
+        facts.push(fact);
+        factsById.set(fact.id, fact);
+      }
+
+      const parsedConstraints = parseConstraints(constraintsSection);
+      const attachedUniquenessConstraints = attachUniquenessConstraintsToFacts(facts, factsById, roleMeta, parsedConstraints.uniquenessConstraints);
+      applyMandatoryConstraintsToRoles(roleMeta, parsedConstraints.mandatoryConstraints);
+      const externalConstraints = collectExternalConstraints(parsedConstraints, roleMeta, factsById, attachedUniquenessConstraints);
+
+      const constraintsCount = constraintsSection ? elementChildren(constraintsSection).length : 0;
+      const modelErrors = modelErrorsSection
+        ? elementChildren(modelErrorsSection)
+            .map((errEl) => errEl.getAttribute('Name') || errEl.textContent.trim())
+            .filter(Boolean)
+        : [];
+
+      const diagramData = extractDiagram(diagram, factsById, readingOrderById, objectById);
+
+      return {
+        fileName,
+        sourceText,
+        xmlDoc: xml,
+        name: ormModel.getAttribute('Name') || fileName,
+        objects,
+        objectById,
+        facts,
+        factsById,
+        roleMeta,
+        readingOrderById,
+        constraintsCount,
+        modelErrors,
+        externalConstraints,
+        diagram: diagramData
+      };
+    }
+
+    function parseConstraints(constraintsSection) {
+      const result = {
+        uniquenessConstraints: [],
+        mandatoryConstraints: [],
+        genericExternalConstraints: []
+      };
+
+      if (!constraintsSection) return result;
+
+      for (const constraintEl of elementChildren(constraintsSection)) {
+        if (isGeneratedReferenceConstraintId(constraintEl.getAttribute('id'))) continue;
+        const roleRefs = parseConstraintRoleRefs(constraintEl);
+        const baseConstraint = {
+          id: constraintEl.getAttribute('id'),
+          name: constraintEl.getAttribute('Name') || constraintEl.localName,
+          roleRefs,
+          preferred: Boolean(firstChildElement(constraintEl, 'PreferredIdentifierFor')) || getEditorMetaAttr(constraintEl, 'Preferred') === 'true',
+          preferredForRef: firstChildElement(constraintEl, 'PreferredIdentifierFor')?.getAttribute('ref') || '',
+          isInternal: constraintEl.getAttribute('IsInternal') === 'true',
+          isSimple: constraintEl.getAttribute('IsSimple') === 'true',
+          isImplied: constraintEl.getAttribute('IsImplied') === 'true',
+          type: constraintEl.localName,
+          minFrequency: constraintEl.getAttribute('MinFrequency') || constraintEl.getAttribute('MinValue') || getEditorMetaAttr(constraintEl, 'MinFrequency') || '',
+          maxFrequency: constraintEl.getAttribute('MaxFrequency') || constraintEl.getAttribute('MaxValue') || getEditorMetaAttr(constraintEl, 'MaxFrequency') || '',
+          pathGroups: parsePathGroups(getEditorMetaAttr(constraintEl, 'PathGroups')),
+          joinPathRoleRefs: parseRoleList(getEditorMetaAttr(constraintEl, 'JoinPathRoleRefs')),
+          projectedRoleRefs: parseRoleList(getEditorMetaAttr(constraintEl, 'ProjectedRoleRefs')),
+          editorPosition: parsePoint(getEditorMetaAttr(constraintEl, 'Position')),
+          userCreated: getEditorMetaAttr(constraintEl, 'UserCreated') === 'true',
+          customRenderKind: getEditorMetaAttr(constraintEl, 'RenderKind') || '',
+          levelOverride: parseOptionalInt(getEditorMetaAttr(constraintEl, 'Level'))
+        };
+
+        if (constraintEl.localName === 'UniquenessConstraint') {
+          result.uniquenessConstraints.push(baseConstraint);
+          continue;
+        }
+
+        if (constraintEl.localName === 'MandatoryConstraint') {
+          result.mandatoryConstraints.push(baseConstraint);
+          continue;
+        }
+
+        if (['ExclusionConstraint', 'EqualityConstraint', 'SubsetConstraint', 'FrequencyConstraint'].includes(constraintEl.localName)) {
+          result.genericExternalConstraints.push(baseConstraint);
+        }
+      }
+
+      return result;
+    }
+
+    function parseConstraintRoleRefs(constraintEl) {
+      return Array.from(constraintEl.getElementsByTagName('*'))
+        .filter((el) => el.localName === 'Role')
+        .map((roleEl) => roleEl.getAttribute('ref') || roleEl.getAttribute('id'))
+        .filter(Boolean);
+    }
+
+    function ensureLlmNamespace(root) {
+      if (!root.getAttribute('xmlns:llm')) {
+        root.setAttribute('xmlns:llm', 'urn:arena:orm2-llm');
+      }
+    }
+
+    function getLlmAttr(el, name) {
+      return el.getAttribute(`llm:${name}`) || '';
+    }
+
+    function parseDataTypeMap(dataTypesSection) {
+      const map = new Map();
+      elementChildren(dataTypesSection).forEach((el) => {
+        const id = el.getAttribute('id');
+        if (id) map.set(id, el.localName);
+      });
+      return map;
+    }
+
+    function parseGeneratedEntityReferenceMap(objectsSection, dataTypeById) {
+      const map = new Map();
+      elementChildren(objectsSection).forEach((el) => {
+        if (el.localName !== 'ValueType') return;
+        const id = el.getAttribute('id') || '';
+        if (!isGeneratedReferenceValueTypeId(id)) return;
+        const entityId = id.replace(/__refvt$/, '');
+        const conceptualDataTypeEl = firstChildElement(el, 'ConceptualDataType');
+        const ref = conceptualDataTypeEl?.getAttribute('ref') || '';
+        map.set(entityId, {
+          valueTypeId: id,
+          dataType: dataTypeById.get(ref) || 'FixedLengthTextDataType'
+        });
+      });
+      return map;
+    }
+
+    function isGeneratedReferenceValueTypeId(id) {
+      return /__refvt$/.test(String(id || ''));
+    }
+
+    function isGeneratedReferenceFactId(id) {
+      return /__reffact$/.test(String(id || ''));
+    }
+
+    function isGeneratedReferenceConstraintId(id) {
+      return /__ref(uc_pref|uc_other|mandatory|mandatory_implied)$/.test(String(id || ''));
+    }
+
+    function getEditorMetaAttr(el, name) {
+      return el.getAttribute(`arena:${name}`) || el.getAttribute(`app:${name}`) || '';
+    }
+
+    function parseRoleList(value) {
+      return String(value || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function parsePathGroups(value) {
+      return String(value || '')
+        .split('|')
+        .map((group) => group.split(',').map((item) => item.trim()).filter(Boolean))
+        .filter((group) => group.length);
+    }
+
+    function parsePoint(value) {
+      const parts = String(value || '').split(',').map((item) => Number(item.trim()));
+      if (parts.length !== 2 || parts.some((item) => Number.isNaN(item))) return null;
+      return { x: parts[0], y: parts[1] };
+    }
+
+    function parseOptionalInt(value) {
+      if (value === '' || value === null || value === undefined) return null;
+      const parsed = Number.parseInt(String(value), 10);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    function attachUniquenessConstraintsToFacts(facts, factsById, roleMeta, uniquenessConstraints) {
+      const attached = new Set();
+
+      for (const fact of facts) {
+        for (const constraintRef of fact.internalConstraintRefs || []) {
+          const constraint = uniquenessConstraints.find((item) => item.id === constraintRef);
+          if (!constraint) continue;
+          fact.uniquenessConstraints.push(constraint);
+          attached.add(constraint.id);
+        }
+      }
+
+      for (const constraint of uniquenessConstraints) {
+        if (attached.has(constraint.id)) continue;
+        const factIds = getConstraintFactIds(constraint, roleMeta);
+
+        if (factIds.length === 1) {
+          const fact = factsById.get(factIds[0]);
+          if (fact) {
+            fact.uniquenessConstraints.push(constraint);
+            attached.add(constraint.id);
+          }
+        }
+      }
+
+      return attached;
+    }
+
+    function applyMandatoryConstraintsToRoles(roleMeta, mandatoryConstraints) {
+      for (const constraint of mandatoryConstraints) {
+        if (constraint.roleRefs.length !== 1) continue;
+        const role = roleMeta.get(constraint.roleRefs[0]);
+        if (role) {
+          role.IsMandatory = true;
+          role.mandatory = true;
+        }
+      }
+    }
+
+    function collectExternalConstraints(parsedConstraints, roleMeta, factsById, attachedUniquenessConstraints) {
+      const externalConstraints = [];
+
+      for (const constraint of parsedConstraints.uniquenessConstraints) {
+        const factIds = getConstraintFactIds(constraint, roleMeta);
+        const isAttachedInternally = attachedUniquenessConstraints.has(constraint.id);
+        const isExternal = !isAttachedInternally || factIds.length !== 1 || !constraint.isInternal;
+        if (!isExternal) continue;
+
+        externalConstraints.push({
+          ...constraint,
+          renderKind: constraint.customRenderKind || 'ExternalUniqueness'
+        });
+      }
+
+      for (const constraint of parsedConstraints.mandatoryConstraints) {
+        if (constraint.roleRefs.length <= 1 && constraint.isSimple) continue;
+        externalConstraints.push({
+          ...constraint,
+          renderKind: constraint.customRenderKind || 'ExternalMandatory'
+        });
+      }
+
+      for (const constraint of parsedConstraints.genericExternalConstraints) {
+        const factIds = getConstraintFactIds(constraint, roleMeta);
+        if (!constraint.roleRefs.length || !factIds.length) continue;
+        if (constraint.type === 'FrequencyConstraint') {
+          const isExternalFrequency = factIds.length > 1 || !constraint.isInternal;
+          if (!isExternalFrequency) continue;
+        }
+        externalConstraints.push({
+          ...constraint,
+          renderKind: constraint.customRenderKind || constraint.type
+        });
+      }
+
+      return mergeOverlayXorConstraints(externalConstraints);
+    }
+
+    function mergeOverlayXorConstraints(externalConstraints) {
+      const used = new Set();
+      const merged = [];
+
+      for (let index = 0; index < externalConstraints.length; index += 1) {
+        if (used.has(index)) continue;
+        const current = externalConstraints[index];
+        if (current.renderKind === 'XorConstraint') {
+          merged.push(current);
+          continue;
+        }
+        if (current.renderKind !== 'ExternalMandatory') {
+          merged.push(current);
+          continue;
+        }
+
+        const mandatoryKey = normalizedRoleRefKey(current.roleRefs || []);
+        const exclusionIndex = externalConstraints.findIndex((candidate, candidateIndex) => (
+          candidateIndex !== index
+          && !used.has(candidateIndex)
+          && candidate.renderKind === 'ExclusionConstraint'
+          && normalizedRoleRefKey(candidate.roleRefs || []) === mandatoryKey
+        ));
+
+        if (exclusionIndex >= 0) {
+          used.add(exclusionIndex);
+          merged.push({
+            ...current,
+            id: `${current.id}__xor__${externalConstraints[exclusionIndex].id}`,
+            name: `${current.name} + ${externalConstraints[exclusionIndex].name}`,
+            renderKind: 'XorConstraint'
+          });
+        } else {
+          merged.push(current);
+        }
+      }
+
+      return merged;
+    }
+
+    function normalizedRoleRefKey(roleRefs) {
+      return [...new Set(roleRefs)].sort().join('|');
+    }
+
+    function getConstraintFactIds(constraint, roleMeta) {
+      return [...new Set(
+        (constraint.roleRefs || [])
+          .map((roleRef) => roleMeta.get(roleRef)?.factId)
+          .filter(Boolean)
+      )];
+    }
+
+    function extractDiagram(diagramEl, factsById, readingOrderById, objectById) {
+      if (!diagramEl) {
+        return generateAutoLayout({ objects: Array.from(objectById.values()), facts: Array.from(factsById.values()) });
+      }
+
+      const objectShapes = [];
+      const factShapes = [];
+      const readingShapes = [];
+
+      for (const el of Array.from(diagramEl.getElementsByTagName('*'))) {
+        if (el.localName === 'ObjectTypeShape') {
+          const bounds = parseBounds(el.getAttribute('AbsoluteBounds'));
+          const subject = firstChildElement(el, 'Subject')?.getAttribute('ref') || null;
+          if (bounds && subject) objectShapes.push({ id: el.getAttribute('id'), subjectRef: subject, bounds });
+        }
+
+        if (el.localName === 'FactTypeShape') {
+          const bounds = parseBounds(el.getAttribute('AbsoluteBounds'));
+          const subject = firstChildElement(el, 'Subject')?.getAttribute('ref') || null;
+          if (bounds && subject) factShapes.push({ id: el.getAttribute('id'), subjectRef: subject, bounds });
+        }
+
+        if (el.localName === 'ReadingShape') {
+          const bounds = parseBounds(el.getAttribute('AbsoluteBounds'));
+          const subject = firstChildElement(el, 'Subject')?.getAttribute('ref') || null;
+          if (bounds && subject) {
+            const readingOrder = readingOrderById.get(subject);
+            readingShapes.push({
+              id: el.getAttribute('id'),
+              subjectRef: subject,
+              bounds,
+              text: readingOrder?.readings?.[0]?.verbalized || readingOrder?.readings?.[0]?.template || ''
+            });
+          }
+        }
+      }
+
+      if (!objectShapes.length && !factShapes.length) {
+        return generateAutoLayout({ objects: Array.from(objectById.values()), facts: Array.from(factsById.values()) });
+      }
+
+      return { objectShapes, factShapes, readingShapes, autoGenerated: false };
+    }
+
+    function generateAutoLayout({ objects, facts }) {
+      const objectShapes = [];
+      const factShapes = [];
+      const readingShapes = [];
+
+      const cols = Math.max(2, Math.ceil(Math.sqrt(Math.max(objects.length, 1))));
+      const cellW = 2.3;
+      const cellH = 1.25;
+
+      objects.forEach((object, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        objectShapes.push({
+          id: `auto-object-${object.id}`,
+          subjectRef: object.id,
+          bounds: { x: 0.8 + col * cellW, y: 0.8 + row * cellH, w: 1.65, h: 0.58 }
+        });
+      });
+
+      const factsTop = 1 + Math.ceil(objects.length / cols) * cellH + 0.7;
+      facts.forEach((fact, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        const x = 1 + col * cellW;
+        const y = factsTop + row * 1.55;
+        factShapes.push({
+          id: `auto-fact-${fact.id}`,
+          subjectRef: fact.id,
+          bounds: { x, y, w: 0.9, h: 0.42 }
+        });
+        readingShapes.push({
+          id: `auto-reading-${fact.id}`,
+          subjectRef: fact.readings?.[0]?.id || fact.id,
+          factId: fact.id,
+          parentFactShapeId: `auto-fact-${fact.id}`,
+          bounds: { x: x - 0.35, y: y + 0.55, w: 2.8, h: 0.26 },
+          text: fact.readings?.[0]?.readings?.[0]?.verbalized || fact.readings?.[0]?.readings?.[0]?.template || fact.name
+        });
+      });
+
+      return { objectShapes, factShapes, readingShapes, autoGenerated: true };
+    }
+
+    function renderModel(model) {
+      renderConstraintEditorState();
+      renderPropertiesPanel();
+      refreshXmlPreview();
+      renderSummary(model);
+      renderBusinessRules(model);
+      renderDiagram(model);
+      applyRulesPanelState();
+      applySidePanelState();
+      updateBarkerHeaderControlsVisibility();
+      updateBusinessRulesCurrentLineHighlight();
+      applyRussianTooltips();
+      applySearchState();
+    }
+
+    function updateBarkerHeaderControlsVisibility() {
+      const show = state.notationMode === 'barker';
+      if (elements.barkerAbsorbValueTypesWrap) elements.barkerAbsorbValueTypesWrap.classList.toggle('hidden', !show);
+      if (elements.barkerShowRoleLabelsWrap) elements.barkerShowRoleLabelsWrap.classList.toggle('hidden', !show);
+    }
+
+    function renderSummary(model) {
+      if (!elements.summary) return;
+      const entityCount = model.objects.filter((o) => o.type === 'EntityType').length;
+      const valueCount = model.objects.filter((o) => o.type === 'ValueType').length;
+      const objectifiedCount = model.objects.filter((o) => o.type === 'ObjectifiedType').length;
+
+      const objectBadges = model.objects
+        .slice(0, 28)
+        .map((object) => {
+          const cls = object.type === 'EntityType' ? 'entity' : object.type === 'ValueType' ? 'value' : 'objectified';
+          const refText = objectRefModesText(object);
+          const label = refText ? `${object.name} (${refText})` : object.name;
+          return `<span class="summary-badge ${cls}" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
+        })
+        .join('');
+
+      const moreObjects = model.objects.length > 28
+        ? `<span class="summary-badge">+ ещё ${model.objects.length - 28}</span>`
+        : '';
+
+      const errorsHtml = model.modelErrors.length
+        ? model.modelErrors.map((item) => `<span class="summary-badge error" title="${escapeHtml(item)}">Ошибка: ${escapeHtml(shortenText(item, 70))}</span>`).join('')
+        : '<span class="summary-badge">Ошибок модели нет</span>';
+
+      const uniquenessList = collectAllUniquenessConstraints(model);
+      const uniquenessWarnings = validateUniquenessConflicts(model);
+      const warningsHtml = uniquenessWarnings.length
+        ? `<div class="summary-line" style="align-items:flex-start;"><span class="summary-label" style="padding-top:2px;">Warnings:</span><div style="max-height:72px; overflow:auto; line-height:1.35; flex:1 1 auto;">${uniquenessWarnings.map((item) => `<div>• ${escapeHtml(item)}</div>`).join('')}</div></div>`
+        : '';
+
+      elements.summary.innerHTML = `
+        <div class="summary-line">
+          <span class="summary-label">Модель:</span>
+          <span class="summary-badge">${escapeHtml(model.name)}</span>
+          <span class="summary-badge">Файл: ${escapeHtml(model.fileName)}</span>
+          <span class="summary-badge">${model.diagram.autoGenerated ? 'Схема построена автоматически' : 'Позиции взяты из ORMDiagram'}</span>
+        </div>
+        <div class="summary-line">
+          <span class="summary-label">Статистика:</span>
+          <span class="summary-badge entity">EntityType: ${entityCount}</span>
+          <span class="summary-badge value">ValueType: ${valueCount}</span>
+          <span class="summary-badge objectified">ObjectifiedType: ${objectifiedCount}</span>
+          <span class="summary-badge">Facts: ${model.facts.length}</span>
+          <span class="summary-badge">Constraints: ${model.constraintsCount}</span>
+          <span class="summary-badge">Uniqueness: ${uniquenessList.length}</span>
+        </div>
+        <div class="summary-line">
+          <span class="summary-label">Ошибки:</span>
+          ${errorsHtml}
+        </div>
+        <div class="summary-line" style="align-items:flex-start;">
+          <span class="summary-label" style="padding-top:4px;">Объекты:</span>
+          <div class="summary-objects">${objectBadges}${moreObjects}</div>
+        </div>
+        ${warningsHtml}
+      `;
+    }
+
+    function passesConstraintFilter(tags) {
+      if (state.constraintFilter === 'all') return true;
+      return (tags || []).includes(state.constraintFilter);
+    }
+
+    function validateUniquenessConflicts(model) {
+      const warnings = [];
+      const preferredByObject = new Map();
+
+      (model.facts || []).forEach((fact) => {
+        const seenKeys = new Set();
+        const rolesByPlayer = new Map();
+        (fact.roles || []).forEach((role) => {
+          const list = rolesByPlayer.get(role.playerRef) || [];
+          list.push(role);
+          rolesByPlayer.set(role.playerRef, list);
+        });
+
+        (fact.uniquenessConstraints || []).forEach((constraint) => {
+          const key = normalizedRoleRefKey(constraint.roleRefs || []);
+          if (seenKeys.has(key)) {
+            warnings.push(`Дублирующий uniqueness в факте «${fact.name}».`);
+          } else {
+            seenKeys.add(key);
+          }
+
+          if ((fact.roles || []).length > 2 && (constraint.roleRefs || []).length < ((fact.roles || []).length - 1)) {
+            warnings.push(`В факте «${fact.name}» internal uniqueness «${constraint.name || constraint.id}» покрывает слишком мало ролей для ORM2.`);
+          }
+
+          if (constraint.preferred) {
+            if (!constraint.preferredForRef) {
+              warnings.push(`Preferred uniqueness «${constraint.name || constraint.id}» не имеет PreferredFor.`);
+            } else {
+              const candidateSet = new Set((fact.roles || []).map((role) => role.playerRef).filter(Boolean));
+              if (!candidateSet.has(constraint.preferredForRef)) {
+                warnings.push(`PreferredFor у uniqueness «${constraint.name || constraint.id}» не входит в роли факта «${fact.name}».`);
+              }
+              const targetRoles = rolesByPlayer.get(constraint.preferredForRef) || [];
+              const hasMandatoryTargetRole = targetRoles.some((role) => role.IsMandatory || role.mandatory);
+              if (!hasMandatoryTargetRole) {
+                warnings.push(`Preferred uniqueness «${constraint.name || constraint.id}» для объекта «${model.objectById.get(constraint.preferredForRef)?.name || constraint.preferredForRef}» не имеет mandatory роли в факте «${fact.name}».`);
+              }
+              const list = preferredByObject.get(constraint.preferredForRef) || [];
+              list.push(constraint.name || constraint.id);
+              preferredByObject.set(constraint.preferredForRef, list);
+            }
+          }
+
+          (constraint.roleRefs || []).forEach((roleRef) => {
+            const role = model.roleMeta.get(roleRef);
+            if (!role) return;
+            const sameRoleUcs = (fact.uniquenessConstraints || []).filter((candidate) => (candidate.roleRefs || []).length === 1 && (candidate.roleRefs || [])[0] === roleRef);
+            if (sameRoleUcs.length > 1) {
+              warnings.push(`У роли «${role.name || role.playerName || roleRef}» в факте «${fact.name}» несколько одно-ролевых uniqueness.`);
+            }
+          });
+        });
+      });
+
+      (model.externalConstraints || []).forEach((constraint) => {
+        if (constraint.renderKind !== 'ExternalUniqueness' || !constraint.preferred) return;
+        if (!constraint.preferredForRef) {
+          warnings.push(`Preferred external uniqueness «${constraint.name || constraint.id}» не имеет PreferredFor.`);
+          return;
+        }
+        const candidateSet = new Set((constraint.roleRefs || []).map((roleRef) => model.roleMeta.get(roleRef)?.playerRef).filter(Boolean));
+        if (!candidateSet.has(constraint.preferredForRef)) {
+          warnings.push(`PreferredFor у external uniqueness «${constraint.name || constraint.id}» не соответствует ролям ограничения.`);
+        }
+        const targetRoles = (constraint.roleRefs || []).map((roleRef) => model.roleMeta.get(roleRef)).filter(Boolean).filter((role) => role.playerRef === constraint.preferredForRef);
+        if (targetRoles.length && !targetRoles.some((role) => role.IsMandatory || role.mandatory)) {
+          warnings.push(`Preferred external uniqueness «${constraint.name || constraint.id}» не имеет mandatory роли для объекта «${model.objectById.get(constraint.preferredForRef)?.name || constraint.preferredForRef}».`);
+        }
+        const list = preferredByObject.get(constraint.preferredForRef) || [];
+        list.push(constraint.name || constraint.id);
+        preferredByObject.set(constraint.preferredForRef, list);
+      });
+
+      preferredByObject.forEach((constraints, objectRef) => {
+        if (constraints.length > 1) {
+          warnings.push(`Для объекта «${model.objectById.get(objectRef)?.name || objectRef}» задано несколько preferred uniqueness.`);
+        }
+      });
+
+      return [...new Set(warnings)];
+    }
+
+    function collectAllUniquenessConstraints(model) {
+      const result = [];
+      (model.facts || []).forEach((fact) => {
+        (fact.uniquenessConstraints || []).forEach((constraint) => {
+          const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+            const role = model.roleMeta.get(roleRef);
+            return role?.name || role?.playerName || roleRef;
+          }).join(' + ');
+          result.push({
+            id: constraint.id,
+            source: 'internal',
+            factName: fact.name,
+            preferred: !!constraint.preferred,
+            label: roleLabels,
+            tags: ['uniqueness']
+          });
+        });
+      });
+      (model.externalConstraints || [])
+        .filter((constraint) => constraint.renderKind === 'ExternalUniqueness')
+        .forEach((constraint) => {
+          const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+            const role = model.roleMeta.get(roleRef);
+            return role?.name || role?.playerName || roleRef;
+          }).join(' + ');
+          result.push({
+            id: constraint.id,
+            source: 'external',
+            factName: 'External uniqueness',
+            preferred: !!constraint.preferred,
+            label: roleLabels,
+            tags: ['uniqueness', 'external']
+          });
+        });
+      return result;
+    }
+
+    function collectAllMandatoryConstraints(model) {
+      const result = [];
+      (model.facts || []).forEach((fact) => {
+        (fact.roles || []).forEach((role) => {
+          if (!(role.IsMandatory || role.mandatory)) return;
+          result.push({
+            kind: 'role',
+            id: role.id || role.actualRoleId,
+            label: `${fact.name}: ${role.name || role.playerName || 'role'} [simple mandatory]`,
+            tags: ['mandatory']
+          });
+        });
+      });
+      (model.externalConstraints || []).forEach((constraint) => {
+        if (!['ExternalMandatory', 'XorConstraint'].includes(constraint.renderKind)) return;
+        const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+          const role = model.roleMeta.get(roleRef);
+          return role?.name || role?.playerName || roleRef;
+        }).join(' + ');
+        result.push({
+          kind: 'constraint',
+          id: constraint.id,
+          label: `${constraint.renderKind === 'XorConstraint' ? 'XOR' : 'IOR'}: ${roleLabels}`,
+          tags: ['mandatory', 'external']
+        });
+      });
+      return result;
+    }
+
+    function collectAllExternalConstraints(model) {
+      return (model.externalConstraints || []).map((constraint) => {
+        const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+          const role = model.roleMeta.get(roleRef);
+          return role?.name || role?.playerName || roleRef;
+        }).join(' + ');
+        const tags = ['external'];
+        if (constraint.renderKind === 'ExternalUniqueness') tags.push('uniqueness');
+        if (['ExternalMandatory', 'XorConstraint'].includes(constraint.renderKind)) tags.push('mandatory');
+        return {
+          id: constraint.id,
+          label: roleLabels,
+          typeLabel: constraint.renderKind || constraint.type,
+          tags
+        };
+      });
+    }
+
+    function dataTypeLabelRu(dataType) {
+      switch (dataType) {
+        case 'FixedLengthTextDataType': return 'Текст: фиксированная длина (0)';
+        case 'SignedIntegerNumericDataType': return 'Число: целое';
+        case 'AutoCounterNumericDataType': return 'Число: автоинкремент';
+        case 'UnspecifiedDataType':
+        default: return 'Не указан';
+      }
+    }
+
+    function multiplicityLabelRu(value) {
+      switch (value) {
+        case 'ExactlyOne': return 'РовноОдин';
+        case 'ZeroToOne': return 'НольИлиОдин';
+        case 'ZeroToMany': return 'НольИлиМного';
+        case 'OneToMany': return 'ОдинИлиМного';
+        case 'Unspecified':
+        default: return 'Не указана';
+      }
+    }
+
+    function renderToken(type, text) {
+      const safe = escapeHtml(text);
+      if (type === 'entity') return `<span class="rule-entity">${safe}</span>`;
+      if (type === 'predicate') return `<span class="rule-predicate">${safe}</span>`;
+      if (type === 'quantifier') return `<span class="rule-quantifier">${safe}</span>`;
+      return safe;
+    }
+
+    function roleDisplayName(role, fallbackIndex = 0) {
+      return role?.name || role?.playerName || `роль ${fallbackIndex + 1}`;
+    }
+
+    function buildPredicateFromFact(fact) {
+      const reading = fact.readings?.[0]?.readings?.[0]?.template || '';
+      if (!reading) return 'связан с';
+      const cleaned = reading
+        .replace(/\{\d+\}/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return cleaned || 'связан с';
+    }
+
+    function pushRule(items, text, html, meta = {}) {
+      items.push({ text, html, ...meta });
+    }
+
+    function buildGenericRoleRules(items, subjectName, predicate, objectName, mandatory, unique) {
+      if (mandatory && unique) {
+        pushRule(
+          items,
+          `Каждый ${subjectName} ${predicate} ровно один ${objectName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', subjectName)} ${renderToken('predicate', predicate)} ${renderToken('quantifier', 'ровно один')} ${renderToken('entity', objectName)}.`
+        );
+        return;
+      }
+      if (mandatory) {
+        pushRule(
+          items,
+          `Каждый ${subjectName} ${predicate} некоторый ${objectName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', subjectName)} ${renderToken('predicate', predicate)} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', objectName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, что некоторый ${subjectName} не ${predicate} ни одного ${objectName}.`,
+          `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', subjectName)} ${renderToken('quantifier', 'не')} ${renderToken('predicate', predicate)} ${renderToken('quantifier', 'ни одного')} ${renderToken('entity', objectName)}.`
+        );
+      }
+      if (unique) {
+        pushRule(
+          items,
+          `Каждый ${subjectName} ${predicate} не более одного ${objectName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', subjectName)} ${renderToken('predicate', predicate)} ${renderToken('quantifier', 'не более одного')} ${renderToken('entity', objectName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, что некоторый ${subjectName} ${predicate} более одного ${objectName}.`,
+          `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', subjectName)} ${renderToken('predicate', predicate)} ${renderToken('quantifier', 'более одного')} ${renderToken('entity', objectName)}.`
+        );
+      }
+    }
+
+    function buildAttributeForwardRules(items, entityName, valueTypeName, mandatory, unique) {
+      if (mandatory && unique) {
+        pushRule(
+          items,
+          `Каждый ${entityName} имеет только один ${valueTypeName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityName)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'только один')} ${renderToken('entity', valueTypeName)}.`
+        );
+        return;
+      }
+      if (mandatory) {
+        pushRule(
+          items,
+          `Каждый ${entityName} имеет некоторый ${valueTypeName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityName)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', valueTypeName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, что некоторый ${entityName} не имеет ни одного ${valueTypeName}.`,
+          `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', entityName)} ${renderToken('quantifier', 'не имеет')} ${renderToken('quantifier', 'ни одного')} ${renderToken('entity', valueTypeName)}.`
+        );
+      }
+      if (unique) {
+        pushRule(
+          items,
+          `Каждый ${entityName} имеет не более одного ${valueTypeName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityName)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'не более одного')} ${renderToken('entity', valueTypeName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, что некоторый ${entityName} имеет более одного ${valueTypeName}.`,
+          `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', entityName)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'более одного')} ${renderToken('entity', valueTypeName)}.`
+        );
+      }
+    }
+
+    function buildAttributeReverseRules(items, valueTypeName, entityName, mandatory, unique) {
+      if (mandatory && unique) {
+        pushRule(
+          items,
+          `Каждый ${valueTypeName} относится только к одной сущности ${entityName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueTypeName)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'только к одной сущности')} ${renderToken('entity', entityName)}.`
+        );
+        return;
+      }
+      if (mandatory) {
+        pushRule(
+          items,
+          `Каждый ${valueTypeName} относится к некоторой сущности ${entityName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueTypeName)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'некоторой сущности')} ${renderToken('entity', entityName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, что некоторый ${valueTypeName} не относится ни к одной сущности ${entityName}.`,
+          `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', valueTypeName)} ${renderToken('quantifier', 'не относится ни к одной сущности')} ${renderToken('entity', entityName)}.`
+        );
+      }
+      if (unique) {
+        pushRule(
+          items,
+          `Каждый ${valueTypeName} относится не более чем к одной сущности ${entityName}.`,
+          `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueTypeName)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'не более чем к одной сущности')} ${renderToken('entity', entityName)}.`
+        );
+      } else {
+        pushRule(
+          items,
+          `Возможно, один ${valueTypeName} относится к одной или более сущностям ${entityName}.`,
+          `${renderToken('quantifier', 'Возможно, один')} ${renderToken('entity', valueTypeName)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'одной или более сущностям')} ${renderToken('entity', entityName)}.`
+        );
+      }
+    }
+
+    function buildBusinessRuleItems(model) {
+      const items = [];
+
+      (model.objects || []).forEach((object) => {
+        if (object.type !== 'EntityType') return;
+        const refModes = Array.isArray(object.refModes) ? object.refModes : parseRefModesInput(object.refMode || '');
+        if (refModes.length) {
+          pushRule(
+            items,
+            `${object.name} определяется через { ${refModes.map((key) => `.${key}`).join(', ')} }.`,
+            `<span class="rule-entity">${escapeHtml(object.name)}</span> <span class="rule-predicate">определяется через</span> { ${escapeHtml(refModes.map((key) => `.${key}`).join(', '))} }.`,
+            { entityRef: object.id }
+          );
+        }
+      });
+
+      (model.facts || []).forEach((fact) => {
+        const roles = fact.roles || [];
+        const pushFactRule = (text, html) => pushRule(items, text, html, { factRef: fact.id });
+        if (roles.length === 1) {
+          const object = model.objectById.get(roles[0].playerRef);
+          if (object?.type === 'EntityType') {
+            const predicate = roleDisplayName(roles[0], 0);
+            pushFactRule(
+              `${object.name} ${predicate}.`,
+              `${renderToken('entity', object.name)} ${renderToken('predicate', predicate)}.`
+            );
+          }
+        }
+
+        if (roles.length === 2) {
+          const leftObject = model.objectById.get(roles[0].playerRef);
+          const rightObject = model.objectById.get(roles[1].playerRef);
+          if (!leftObject || !rightObject) return;
+
+          const entityValuePattern =
+            (leftObject.type === 'EntityType' && rightObject.type === 'ValueType') ||
+            (leftObject.type === 'ValueType' && rightObject.type === 'EntityType');
+
+          if (entityValuePattern) {
+            const entityRole = leftObject.type === 'EntityType' ? roles[0] : roles[1];
+            const valueRole = leftObject.type === 'ValueType' ? roles[0] : roles[1];
+            const entityObject = model.objectById.get(entityRole.playerRef);
+            const valueObject = model.objectById.get(valueRole.playerRef);
+            const entityMandatory = !!(entityRole.IsMandatory || entityRole.mandatory);
+            const valueMandatory = !!(valueRole.IsMandatory || valueRole.mandatory);
+            const entityUnique = hasSingleRoleUniqueness(fact, entityRole.id || entityRole.actualRoleId);
+            const valueUnique = hasSingleRoleUniqueness(fact, valueRole.id || valueRole.actualRoleId);
+
+            pushFactRule(
+              `${entityObject.name} имеет атрибут ${valueObject.name}.`,
+              `${renderToken('entity', entityObject.name)} ${renderToken('predicate', 'имеет атрибут')} ${renderToken('entity', valueObject.name)}.`
+            );
+
+            if (entityMandatory && entityUnique) {
+              items.push({
+                text: `Каждый ${entityObject.name} имеет только один ${valueObject.name}.`,
+                html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityObject.name)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'только один')} ${renderToken('entity', valueObject.name)}.`
+              });
+            } else {
+              if (entityMandatory) {
+                items.push({
+                  text: `Каждый ${entityObject.name} имеет некоторый ${valueObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityObject.name)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', valueObject.name)}.`
+                });
+              }
+              if (entityUnique) {
+                items.push({
+                  text: `Каждый ${entityObject.name} имеет не более одного ${valueObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', entityObject.name)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'не более одного')} ${renderToken('entity', valueObject.name)}.`
+                });
+              } else {
+                items.push({
+                  text: `Возможно, что некоторый ${entityObject.name} имеет более одного ${valueObject.name}.`,
+                  html: `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', entityObject.name)} ${renderToken('predicate', 'имеет')} ${renderToken('quantifier', 'более одного')} ${renderToken('entity', valueObject.name)}.`
+                });
+              }
+            }
+
+            if (valueMandatory && valueUnique) {
+              items.push({
+                text: `Каждый ${valueObject.name} относится только к одной сущности ${entityObject.name}.`,
+                html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueObject.name)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'только к одной сущности')} ${renderToken('entity', entityObject.name)}.`
+              });
+            } else {
+              if (valueMandatory) {
+                items.push({
+                  text: `Каждый ${valueObject.name} относится к некоторой сущности ${entityObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueObject.name)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'некоторой сущности')} ${renderToken('entity', entityObject.name)}.`
+                });
+              }
+              if (valueUnique) {
+                items.push({
+                  text: `Каждый ${valueObject.name} относится не более чем к одной сущности ${entityObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', valueObject.name)} ${renderToken('predicate', 'относится к')} ${renderToken('quantifier', 'не более чем к одной сущности')} ${renderToken('entity', entityObject.name)}.`
+                });
+              } else {
+                items.push({
+                  text: `Возможно, один ${valueObject.name} относятся к одной или более сущностям ${entityObject.name}.`,
+                  html: `${renderToken('quantifier', 'Возможно, один')} ${renderToken('entity', valueObject.name)} ${renderToken('predicate', 'относятся к')} ${renderToken('quantifier', 'одной или более сущностям')} ${renderToken('entity', entityObject.name)}.`
+                });
+              }
+            }
+            return;
+          }
+
+          if (leftObject.type === 'EntityType' && rightObject.type === 'EntityType') {
+            const leftPredicate = roleDisplayName(roles[0], 0) || buildPredicateFromFact(fact);
+            const rightPredicate = roleDisplayName(roles[1], 1) || buildPredicateFromFact(fact);
+            const leftMandatory = !!(roles[0].IsMandatory || roles[0].mandatory);
+            const rightMandatory = !!(roles[1].IsMandatory || roles[1].mandatory);
+            const leftUnique = hasSingleRoleUniqueness(fact, roles[0].id || roles[0].actualRoleId);
+            const rightUnique = hasSingleRoleUniqueness(fact, roles[1].id || roles[1].actualRoleId);
+
+            pushFactRule(
+              `${leftObject.name} ${leftPredicate} ${rightObject.name}.`,
+              `${renderToken('entity', leftObject.name)} ${renderToken('predicate', leftPredicate)} ${renderToken('entity', rightObject.name)}.`
+            );
+
+            if (leftMandatory && leftUnique) {
+              items.push({
+                text: `Каждый ${leftObject.name} ${leftPredicate} только один ${rightObject.name}.`,
+                html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', leftObject.name)} ${renderToken('predicate', leftPredicate)} ${renderToken('quantifier', 'только один')} ${renderToken('entity', rightObject.name)}.`
+              });
+            } else {
+              if (leftMandatory) {
+                items.push({
+                  text: `Каждый ${leftObject.name} ${leftPredicate} некоторый ${rightObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', leftObject.name)} ${renderToken('predicate', leftPredicate)} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', rightObject.name)}.`
+                });
+              }
+              if (leftUnique) {
+                items.push({
+                  text: `Каждый ${leftObject.name} ${leftPredicate} не более одного ${rightObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', leftObject.name)} ${renderToken('predicate', leftPredicate)} ${renderToken('quantifier', 'не более одного')} ${renderToken('entity', rightObject.name)}.`
+                });
+              } else {
+                items.push({
+                  text: `Возможно, что некоторый ${leftObject.name} ${leftPredicate} более одного ${rightObject.name}.`,
+                  html: `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', leftObject.name)} ${renderToken('predicate', leftPredicate)} ${renderToken('quantifier', 'более одного')} ${renderToken('entity', rightObject.name)}.`
+                });
+              }
+            }
+
+            if (rightMandatory && rightUnique) {
+              items.push({
+                text: `Каждый ${rightObject.name} ${rightPredicate} только один ${leftObject.name}.`,
+                html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', rightObject.name)} ${renderToken('predicate', rightPredicate)} ${renderToken('quantifier', 'только один')} ${renderToken('entity', leftObject.name)}.`
+              });
+            } else {
+              if (rightMandatory) {
+                items.push({
+                  text: `Каждый ${rightObject.name} ${rightPredicate} некоторый ${leftObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', rightObject.name)} ${renderToken('predicate', rightPredicate)} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', leftObject.name)}.`
+                });
+              }
+              if (rightUnique) {
+                items.push({
+                  text: `Каждый ${rightObject.name} ${rightPredicate} не более одного ${leftObject.name}.`,
+                  html: `${renderToken('quantifier', 'Каждый')} ${renderToken('entity', rightObject.name)} ${renderToken('predicate', rightPredicate)} ${renderToken('quantifier', 'не более одного')} ${renderToken('entity', leftObject.name)}.`
+                });
+              } else {
+                items.push({
+                  text: `Возможно, что некоторый ${rightObject.name} ${rightPredicate} более одного ${leftObject.name}.`,
+                  html: `${renderToken('quantifier', 'Возможно, что')} ${renderToken('quantifier', 'некоторый')} ${renderToken('entity', rightObject.name)} ${renderToken('predicate', rightPredicate)} ${renderToken('quantifier', 'более одного')} ${renderToken('entity', leftObject.name)}.`
+                });
+              }
+            }
+          }
+        }
+
+        const preferredComposite = (fact.uniquenessConstraints || []).find((constraint) => constraint.preferred && (constraint.roleRefs || []).length >= 2 && (fact.roles || []).length >= 3);
+        if (preferredComposite) {
+          const constrainedRoles = (preferredComposite.roleRefs || []).map((roleRef) => model.roleMeta.get(roleRef)).filter(Boolean);
+          const remainingRole = (fact.roles || []).find((role) => !(preferredComposite.roleRefs || []).includes(role.id) && !(preferredComposite.roleRefs || []).includes(role.actualRoleId));
+          if (constrainedRoles.length >= 2 && remainingRole) {
+            const entityNames = constrainedRoles.map((role) => role.playerName);
+            const associationNames = entityNames.join(', ');
+            items.push({
+              text: `Для каждой ${entityNames.join(' и ')} такая ассоциация ${associationNames} определяет не более одного ${remainingRole.playerName}. Эта ассоциация с ${associationNames} задаёт предпочтительную схему идентификации для ${model.objectById.get(preferredComposite.preferredForRef)?.name || preferredComposite.preferredForRef || remainingRole.playerName}.`,
+              html: `${renderToken('quantifier', 'Для каждой')} ${entityNames.map((name) => renderToken('entity', name)).join(` ${renderToken('quantifier', 'и')} `)} ${renderToken('quantifier', 'такая ассоциация')} ${escapeHtml(associationNames)} ${renderToken('quantifier', 'определяет не более одного')} ${renderToken('entity', remainingRole.playerName)}. ${renderToken('quantifier', 'Эта ассоциация с')} ${escapeHtml(associationNames)} ${renderToken('predicate', 'задаёт предпочтительную схему идентификации для')} ${renderToken('entity', model.objectById.get(preferredComposite.preferredForRef)?.name || preferredComposite.preferredForRef || remainingRole.playerName)}.`
+            });
+          }
+        }
+      });
+
+      return items;
+    }
+
+    function businessRulesText(items) {
+      return items.map((item) => item.text).join('\n');
+    }
+
+    function renderBusinessRules(model) {
+      const items = buildBusinessRuleItems(model);
+      elements.businessRulesMeta.textContent = `${items.length} правил`;
+      elements.businessRulesPanel.innerHTML = items.length
+        ? items.map((item, index) => `<div class="business-rule-item" data-rule-index="${index}" data-entity-ref="${escapeHtml(item.entityRef || '')}" data-fact-ref="${escapeHtml(item.factRef || '')}">${item.html}</div>`).join('')
+        : '<div class="empty-list">Бизнес-правила не сформированы.</div>';
+      elements.businessRulesPanel.querySelectorAll('.business-rule-item').forEach((el) => {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', () => {
+          elements.businessRulesPanel.querySelectorAll('.business-rule-item').forEach((node) => node.classList.remove('active'));
+          el.classList.add('active');
+          const entityRef = el.getAttribute('data-entity-ref');
+          const factRef = el.getAttribute('data-fact-ref');
+          if (entityRef) {
+            focusDiagramElementFromBusinessRule('object', entityRef);
+          } else if (factRef) {
+            focusDiagramElementFromBusinessRule('fact', factRef);
+          }
+        });
+      });
+    }
+
+    function focusDiagramElementFromBusinessRule(kind, id) {
+      state.businessRuleFocusElement = { kind, id };
+      selectElement(kind, id, { keepBusinessRuleFocus: true });
+      requestAnimationFrame(() => {
+        centerDiagramOnElement(kind, id, { smooth: true });
+        applySearchState();
+      });
+    }
+
+    function clearBusinessRuleFocus() {
+      state.businessRuleFocusElement = null;
+    }
+
+    function findRenderedDiagramElementNode(kind, id) {
+      return Array.from(elements.diagramSvg.querySelectorAll('[data-element-kind]')).find((node) => (
+        node.getAttribute('data-element-kind') === kind
+        && node.getAttribute('data-element-id') === id
+      )) || null;
+    }
+
+    function modelPointToSvgPoint(x, y) {
+      if (!state.diagramTransform) return null;
+      return {
+        x: (x - state.diagramTransform.minX) * state.diagramTransform.scale + state.diagramTransform.margin,
+        y: (y - state.diagramTransform.minY) * state.diagramTransform.scale + state.diagramTransform.margin
+      };
+    }
+
+    function getDiagramElementPointFromModel(kind, id) {
+      if (!state.model) return null;
+      if (kind === 'object') {
+        const shape = (state.model.diagram.objectShapes || []).find((item) => item.subjectRef === id);
+        return shape ? modelPointToSvgPoint(shape.bounds.x + shape.bounds.w / 2, shape.bounds.y + shape.bounds.h / 2) : null;
+      }
+      if (kind === 'fact') {
+        const shape = (state.model.diagram.factShapes || []).find((item) => item.subjectRef === id);
+        if (shape) return modelPointToSvgPoint(shape.bounds.x + shape.bounds.w / 2, shape.bounds.y + shape.bounds.h / 2);
+        const fact = state.model.factsById?.get(id);
+        const objectCenters = (fact?.roles || [])
+          .map((role) => (state.model.diagram.objectShapes || []).find((item) => item.subjectRef === role.playerRef))
+          .filter(Boolean)
+          .map((shape) => ({ x: shape.bounds.x + shape.bounds.w / 2, y: shape.bounds.y + shape.bounds.h / 2 }));
+        if (objectCenters.length) {
+          const avgX = objectCenters.reduce((sum, point) => sum + point.x, 0) / objectCenters.length;
+          const avgY = objectCenters.reduce((sum, point) => sum + point.y, 0) / objectCenters.length;
+          return modelPointToSvgPoint(avgX, avgY);
+        }
+      }
+      return null;
+    }
+
+    function centerDiagramOnElement(kind, id, options = {}) {
+      const renderedNode = findRenderedDiagramElementNode(kind, id);
+      if (renderedNode && renderedNode.getBBox) {
+        const bbox = renderedNode.getBBox();
+        scrollDiagramToPoint(bbox.x + bbox.width / 2, bbox.y + bbox.height / 2, options);
+        return true;
+      }
+      const fallbackPoint = getDiagramElementPointFromModel(kind, id);
+      if (fallbackPoint) {
+        scrollDiagramToPoint(fallbackPoint.x, fallbackPoint.y, options);
+        return true;
+      }
+      return false;
+    }
+
+    function renderBusinessRuleFocusOverlay() {
+      const existingLayer = document.getElementById('businessRuleFocusOverlayLayer');
+      if (existingLayer) existingLayer.remove();
+      if (!state.businessRuleFocusElement) return;
+      const node = findRenderedDiagramElementNode(state.businessRuleFocusElement.kind, state.businessRuleFocusElement.id);
+      if (!node || !node.getBBox) return;
+      const bbox = node.getBBox();
+      if (!Number.isFinite(bbox.x) || !Number.isFinite(bbox.y) || bbox.width <= 0 || bbox.height <= 0) return;
+
+      const padding = state.businessRuleFocusElement.kind === 'object' ? 10 : 14;
+      const overlayLayer = createSvgElement('g');
+      overlayLayer.setAttribute('id', 'businessRuleFocusOverlayLayer');
+      overlayLayer.setAttribute('pointer-events', 'none');
+
+      const glow = createSvgElement('rect');
+      glow.setAttribute('x', String(bbox.x - padding));
+      glow.setAttribute('y', String(bbox.y - padding));
+      glow.setAttribute('width', String(bbox.width + padding * 2));
+      glow.setAttribute('height', String(bbox.height + padding * 2));
+      glow.setAttribute('rx', state.businessRuleFocusElement.kind === 'object' ? '18' : '10');
+      glow.setAttribute('ry', state.businessRuleFocusElement.kind === 'object' ? '18' : '10');
+      glow.setAttribute('fill', '#ffd3e8');
+      glow.setAttribute('fill-opacity', '0.26');
+      glow.setAttribute('stroke', '#ff2f92');
+      glow.setAttribute('stroke-width', '4');
+      overlayLayer.appendChild(glow);
+
+      elements.diagramSvg.appendChild(overlayLayer);
+    }
+
+    function isBarkerEntityLikeObject(object) {
+      return object?.type === 'EntityType' || object?.type === 'ObjectifiedType';
+    }
+
+    function getBarkerEntityValueBindingForFact(model, fact) {
+      const roles = fact?.roles || [];
+      if (roles.length !== 2) return null;
+
+      const firstObject = model.objectById.get(roles[0].playerRef);
+      const secondObject = model.objectById.get(roles[1].playerRef);
+      if (!firstObject || !secondObject) return null;
+
+      if (isBarkerEntityLikeObject(firstObject) && secondObject.type === 'ValueType') {
+        return {
+          entityObject: firstObject,
+          entityRole: roles[0],
+          entityRoleIndex: 0,
+          valueObject: secondObject,
+          valueRole: roles[1],
+          valueRoleIndex: 1
+        };
+      }
+
+      if (firstObject.type === 'ValueType' && isBarkerEntityLikeObject(secondObject)) {
+        return {
+          entityObject: secondObject,
+          entityRole: roles[1],
+          entityRoleIndex: 1,
+          valueObject: firstObject,
+          valueRole: roles[0],
+          valueRoleIndex: 0
+        };
+      }
+
+      return null;
+    }
+
+    function buildBarkerERView(model) {
+      const absorbedValueTypeIds = new Set();
+      if (state.barkerAbsorbValueTypes) {
+        (model.facts || []).forEach((fact) => {
+          const binding = getBarkerEntityValueBindingForFact(model, fact);
+          if (binding) absorbedValueTypeIds.add(binding.valueObject.id);
+        });
+      }
+
+      const entities = model.objects
+        .filter((object) => isBarkerEntityLikeObject(object) || (object.type === 'ValueType' && !absorbedValueTypeIds.has(object.id)))
+        .map((object) => ({
+          id: object.id,
+          name: object.name,
+          type: object.type,
+          attributes: collectBarkerAttributesForEntity(model, object.id, absorbedValueTypeIds)
+        }));
+
+      const entityById = new Map(entities.map((entity) => [entity.id, entity]));
+      const relationships = [];
+      const associative = [];
+
+      (model.facts || []).forEach((fact) => {
+        const roles = fact.roles || [];
+        if (roles.length === 1) {
+          const object = model.objectById.get(roles[0].playerRef);
+          if (object && entityById.has(object.id)) {
+            const owner = entityById.get(object.id);
+            owner.attributes.push({
+              name: roleDisplayName(roles[0], 0),
+              preferred: false,
+              mandatory: !!(roles[0].IsMandatory || roles[0].mandatory),
+              kind: 'unary-boolean'
+            });
+          }
+          return;
+        }
+
+        if (roles.length === 2) {
+          const leftObject = model.objectById.get(roles[0].playerRef);
+          const rightObject = model.objectById.get(roles[1].playerRef);
+          if (!leftObject || !rightObject) return;
+
+          const entityValueBinding = getBarkerEntityValueBindingForFact(model, fact);
+          if (state.barkerAbsorbValueTypes && entityValueBinding) {
+            return;
+          }
+
+          if (entityById.has(leftObject.id) && entityById.has(rightObject.id)) {
+            const leftFlags = barkerRoleVisualFlags(roles[0], fact);
+            const rightFlags = barkerRoleVisualFlags(roles[1], fact);
+            relationships.push({
+              factId: fact.id,
+              leftId: leftObject.id,
+              rightId: rightObject.id,
+              leftLabel: roleDisplayName(roles[0], 0),
+              rightLabel: roleDisplayName(roles[1], 1),
+              leftMandatory: leftFlags.mandatory,
+              rightMandatory: rightFlags.mandatory,
+              leftMaxOne: leftFlags.maxOne,
+              rightMaxOne: rightFlags.maxOne,
+              leftCardinality: roleCardinalityText(roles[0], fact),
+              rightCardinality: roleCardinalityText(roles[1], fact)
+            });
+            return;
+          }
+        }
+
+        if (roles.length >= 3) {
+          associative.push({
+            factId: fact.id,
+            name: fact.name || buildPredicateFromFact(fact),
+            participants: roles.map((role) => {
+              const flags = barkerRoleVisualFlags(role, fact);
+              return {
+                objectId: role.playerRef,
+                label: roleDisplayName(role, role.factRoleIndex || 0),
+                mandatory: flags.mandatory,
+                maxOne: flags.maxOne,
+                cardinality: roleCardinalityText(role, fact)
+              };
+            }).filter((item) => entityById.has(item.objectId))
+          });
+        }
+      });
+
+      entities.forEach((entity) => {
+        const uniq = new Map();
+        entity.attributes.forEach((attr) => {
+          const key = `${attr.kind}:${attr.name}`;
+          if (!uniq.has(key)) uniq.set(key, attr);
+        });
+        entity.attributes = [...uniq.values()];
+      });
+
+      return { entities, relationships, associative };
+    }
+
+    function collectBarkerAttributesForEntity(model, entityId, absorbedValueTypeIds = new Set()) {
+      const object = model.objectById.get(entityId);
+      const attributes = [];
+      if (!object) return attributes;
+
+      if (object.type === 'EntityType' || object.type === 'ObjectifiedType') {
+        const refModes = Array.isArray(object.refModes) ? object.refModes : parseRefModesInput(object.refMode || '');
+        refModes.forEach((mode, index) => {
+          attributes.push({
+            name: mode,
+            preferred: index === 0,
+            mandatory: true,
+            kind: 'reference'
+          });
+        });
+      }
+
+      if (object.type === 'ValueType' && !absorbedValueTypeIds.has(object.id)) {
+        attributes.push({
+          name: `value : ${dataTypeLabelRu(object.dataType)}`,
+          preferred: false,
+          mandatory: true,
+          kind: 'value-domain'
+        });
+      }
+
+      (model.facts || []).forEach((fact) => {
+        const binding = getBarkerEntityValueBindingForFact(model, fact);
+        if (!binding) return;
+        if (!absorbedValueTypeIds.has(binding.valueObject.id)) return;
+        if (binding.entityObject.id !== entityId) return;
+
+        const valueRoleRef = binding.valueRole.id || binding.valueRole.actualRoleId;
+        attributes.push({
+          name: binding.valueObject.name,
+          preferred: !!(fact.uniquenessConstraints || []).find((constraint) => constraint.preferred && (constraint.roleRefs || []).includes(valueRoleRef)),
+          mandatory: !!(binding.entityRole.IsMandatory || binding.entityRole.mandatory),
+          kind: 'value'
+        });
+      });
+
+      return attributes;
+    }
+
+    function roleCardinalityText(role, fact) {
+      const multiplicity = role.Multiplicity || role.multiplicity || 'Unspecified';
+      const unique = hasSingleRoleUniqueness(fact, role.id || role.actualRoleId);
+      if (multiplicity === 'ExactlyOne' || ((role.IsMandatory || role.mandatory) && unique)) return '1';
+      if (multiplicity === 'ZeroToOne' || unique) return '0..1';
+      if (multiplicity === 'OneToMany' || (role.IsMandatory || role.mandatory)) return '1..*';
+      return '0..*';
+    }
+
+    function barkerRoleVisualFlags(role, fact) {
+      const multiplicity = role?.Multiplicity || role?.multiplicity || 'Unspecified';
+      const unique = hasSingleRoleUniqueness(fact, role?.id || role?.actualRoleId);
+      return {
+        mandatory: multiplicity === 'ExactlyOne' || multiplicity === 'OneToMany' || !!(role?.IsMandatory || role?.mandatory),
+        maxOne: multiplicity === 'ExactlyOne' || multiplicity === 'ZeroToOne' || unique
+      };
+    }
+
+    function normalizeBarkerVector(dx, dy) {
+      const length = Math.hypot(dx, dy) || 1;
+      return { x: dx / length, y: dy / length, length };
+    }
+
+    function computeBarkerRelationshipGeometry(leftRect, rightRect) {
+      const leftCenter = { x: leftRect.x + leftRect.w / 2, y: leftRect.y + leftRect.h / 2 };
+      const rightCenter = { x: rightRect.x + rightRect.w / 2, y: rightRect.y + rightRect.h / 2 };
+      const dx = rightCenter.x - leftCenter.x;
+      const dy = rightCenter.y - leftCenter.y;
+      const horizontalDominant = Math.abs(dx) >= Math.abs(dy);
+
+      const startPoint = horizontalDominant
+        ? { x: dx >= 0 ? leftRect.x + leftRect.w : leftRect.x, y: leftCenter.y }
+        : { x: leftCenter.x, y: dy >= 0 ? leftRect.y + leftRect.h : leftRect.y };
+
+      const endPoint = horizontalDominant
+        ? { x: dx >= 0 ? rightRect.x : rightRect.x + rightRect.w, y: rightCenter.y }
+        : { x: rightCenter.x, y: dy >= 0 ? rightRect.y : rightRect.y + rightRect.h };
+
+      const direction = normalizeBarkerVector(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+      const normal = normalizeBarkerVector(-direction.y, direction.x);
+
+      return { startPoint, endPoint, direction, normal, horizontalDominant };
+    }
+
+    function getBarkerLabelTextAnchor(direction, isStart) {
+      if (Math.abs(direction.x) >= Math.abs(direction.y)) {
+        if (isStart) return direction.x >= 0 ? 'start' : 'end';
+        return direction.x >= 0 ? 'end' : 'start';
+      }
+      return 'middle';
+    }
+
+    function ellipsizeBarkerText(text, maxWidth, font = '11px Tahoma') {
+      const normalized = String(text || '').trim();
+      if (!normalized) return '';
+      if (measureTextWidth(normalized, font) <= maxWidth) return normalized;
+      let result = normalized;
+      while (result.length > 1 && measureTextWidth(`${result}…`, font) > maxWidth) {
+        result = result.slice(0, -1).trimEnd();
+      }
+      return `${result}…`;
+    }
+
+    function splitBarkerLabelLines(text, maxWidth = 150, font = '11px Tahoma') {
+      const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+      if (!normalized) return [''];
+      if (measureTextWidth(normalized, font) <= maxWidth) return [normalized];
+
+      const words = normalized.split(' ');
+      if (words.length === 1) {
+        const midpoint = Math.max(1, Math.floor(normalized.length / 2));
+        const first = ellipsizeBarkerText(normalized.slice(0, midpoint), maxWidth, font);
+        const second = ellipsizeBarkerText(normalized.slice(midpoint), maxWidth, font);
+        return [first, second];
+      }
+
+      let best = null;
+      for (let index = 1; index < words.length; index += 1) {
+        const first = words.slice(0, index).join(' ');
+        const second = words.slice(index).join(' ');
+        const firstWidth = measureTextWidth(first, font);
+        const secondWidth = measureTextWidth(second, font);
+        const score = Math.max(firstWidth, secondWidth) + Math.abs(firstWidth - secondWidth) * 0.35;
+        if (!best || score < best.score) best = { first, second, score };
+      }
+
+      const firstLine = ellipsizeBarkerText(best.first, maxWidth, font);
+      const secondLine = ellipsizeBarkerText(best.second, maxWidth, font);
+      return [firstLine, secondLine].filter(Boolean);
+    }
+
+    function estimateBarkerTextRect(x, y, lines, anchor, font = '11px Tahoma', lineHeight = 13) {
+      const lineList = Array.isArray(lines) ? lines : [String(lines || '')];
+      const width = Math.max(1, ...lineList.map((line) => measureTextWidth(line, font)));
+      const height = Math.max(1, lineList.length) * lineHeight;
+      let left = x;
+      if (anchor === 'end') left = x - width;
+      else if (anchor === 'middle') left = x - width / 2;
+      return {
+        left,
+        right: left + width,
+        top: y - 11,
+        bottom: y - 11 + height + 4,
+        width,
+        height
+      };
+    }
+
+    function barkerTextRectsOverlap(a, b) {
+      return !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);
+    }
+
+    function createBarkerTextLayout(point, direction, normal, rawText, isStart, sideSign, offset = { dx: 0, dy: 0 }, options = {}) {
+      const font = options.font || '11px Tahoma';
+      const lineHeight = options.lineHeight || 13;
+      const wrap = options.wrap !== false;
+      const lines = wrap ? splitBarkerLabelLines(rawText, options.maxWidth || 150, font) : [String(rawText || '')];
+      const tangentDistance = options.tangentDistance ?? 18;
+      const normalDistance = options.normalDistance ?? 24;
+      const base = isStart
+        ? { x: point.x + direction.x * tangentDistance, y: point.y + direction.y * tangentDistance }
+        : { x: point.x - direction.x * tangentDistance, y: point.y - direction.y * tangentDistance };
+
+      return {
+        rawText,
+        lines,
+        font,
+        lineHeight,
+        anchor: getBarkerLabelTextAnchor(direction, isStart),
+        x: base.x + normal.x * normalDistance * sideSign + (offset.dx || 0),
+        y: base.y + normal.y * normalDistance * sideSign + (offset.dy || 0),
+        sideSign,
+        wrap
+      };
+    }
+
+    function resolveBarkerRelationshipLabelOverlap(leftLayout, rightLayout, geometry) {
+      let attempts = 0;
+      while (attempts < 8) {
+        const leftRect = estimateBarkerTextRect(leftLayout.x, leftLayout.y, leftLayout.lines, leftLayout.anchor, leftLayout.font, leftLayout.lineHeight);
+        const rightRect = estimateBarkerTextRect(rightLayout.x, rightLayout.y, rightLayout.lines, rightLayout.anchor, rightLayout.font, rightLayout.lineHeight);
+        if (!barkerTextRectsOverlap(leftRect, rightRect)) break;
+        const separation = 9;
+        leftLayout.x += geometry.normal.x * separation * leftLayout.sideSign - geometry.direction.x * 2;
+        leftLayout.y += geometry.normal.y * separation * leftLayout.sideSign - geometry.direction.y * 2;
+        rightLayout.x += geometry.normal.x * separation * rightLayout.sideSign + geometry.direction.x * 2;
+        rightLayout.y += geometry.normal.y * separation * rightLayout.sideSign + geometry.direction.y * 2;
+        attempts += 1;
+      }
+      return { leftLayout, rightLayout };
+    }
+
+    function createBarkerEndpointMarkerPoint(point, direction, normal, isStart, sideSign, options = {}) {
+      const tangentDistance = options.tangentDistance ?? 7;
+      const normalDistance = options.normalDistance ?? 5;
+      const base = isStart
+        ? { x: point.x + direction.x * tangentDistance, y: point.y + direction.y * tangentDistance }
+        : { x: point.x - direction.x * tangentDistance, y: point.y - direction.y * tangentDistance };
+      return {
+        x: base.x + normal.x * normalDistance * sideSign,
+        y: base.y + normal.y * normalDistance * sideSign
+      };
+    }
+
+    function renderBarkerMultilineText(layout, options = {}) {
+      const text = createSvgElement('text');
+      text.setAttribute('x', String(layout.x));
+      text.setAttribute('y', String(layout.y));
+      text.setAttribute('text-anchor', layout.anchor);
+      text.setAttribute('font-size', String(options.fontSize || 11));
+      text.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+      text.setAttribute('fill', options.fill || '#222');
+      if (options.dataKey) text.setAttribute('data-barker-role-label', options.dataKey);
+      if (options.cursor) text.style.cursor = options.cursor;
+      layout.lines.forEach((line, index) => {
+        const tspan = createSvgElement('tspan');
+        tspan.setAttribute('x', String(layout.x));
+        if (index > 0) tspan.setAttribute('dy', String(layout.lineHeight));
+        tspan.textContent = line;
+        text.appendChild(tspan);
+      });
+      if (typeof options.onMouseDown === 'function') {
+        text.addEventListener('mousedown', options.onMouseDown);
+      }
+      return text;
+    }
+
+    function drawBarkerPerpendicularBar(group, point, normal, size = 6, stroke = '#444', strokeWidth = '1.4') {
+      const line = createSvgElement('line');
+      line.setAttribute('x1', String(point.x - normal.x * size));
+      line.setAttribute('y1', String(point.y - normal.y * size));
+      line.setAttribute('x2', String(point.x + normal.x * size));
+      line.setAttribute('y2', String(point.y + normal.y * size));
+      line.setAttribute('stroke', stroke);
+      line.setAttribute('stroke-width', strokeWidth);
+      group.appendChild(line);
+    }
+
+    function drawBarkerRelationshipEndNotation(group, point, direction, normal, isStart, mandatory) {
+      const inward = isStart ? { x: direction.x, y: direction.y } : { x: -direction.x, y: -direction.y };
+      const symbolBase = { x: point.x + inward.x * 12, y: point.y + inward.y * 12 };
+
+      if (mandatory) {
+        drawBarkerPerpendicularBar(group, symbolBase, normal, 6, '#444', '1.4');
+      } else {
+        const circle = createSvgElement('circle');
+        circle.setAttribute('cx', String(symbolBase.x));
+        circle.setAttribute('cy', String(symbolBase.y));
+        circle.setAttribute('r', '4');
+        circle.setAttribute('fill', '#ffffff');
+        circle.setAttribute('stroke', '#444');
+        circle.setAttribute('stroke-width', '1.3');
+        group.appendChild(circle);
+      }
+    }
+
+    function renderBarkerERDiagram(model) {
+      const svg = elements.diagramSvg;
+      svg.innerHTML = '';
+      elements.diagramTitle.textContent = 'Диаграмма Barker ER';
+      const scale = 170;
+      const margin = 40;
+      const objectShapes = model.diagram.objectShapes || [];
+      const factShapes = model.diagram.factShapes || [];
+      const allBounds = [...objectShapes, ...factShapes].map((item) => item.bounds);
+      const xs = allBounds.flatMap((b) => [b.x, b.x + b.w]);
+      const ys = allBounds.flatMap((b) => [b.y, b.y + b.h]);
+      const minX = Math.min(...xs, 0);
+      const minY = Math.min(...ys, 0);
+      const maxX = Math.max(...xs, 8);
+      const maxY = Math.max(...ys, 5);
+      const width = Math.max(900, Math.round((maxX - minX) * scale + margin * 2));
+      const height = Math.max(520, Math.round((maxY - minY) * scale + margin * 2));
+
+      state.lastDiagramMetrics = { width, height };
+      state.diagramTransform = { scale, margin, minX, minY };
+      elements.diagramEmpty.classList.add('hidden');
+      elements.diagramMeta.textContent = 'Barker ER';
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      elements.diagramStage.style.width = `${width}px`;
+      elements.diagramStage.style.height = `${height}px`;
+
+      const bg = createSvgElement('rect');
+      bg.setAttribute('x', '0');
+      bg.setAttribute('y', '0');
+      bg.setAttribute('width', String(width));
+      bg.setAttribute('height', String(height));
+      bg.setAttribute('fill', '#ffffff');
+      svg.appendChild(bg);
+
+      const view = buildBarkerERView(model);
+      const objectShapeByRef = new Map(objectShapes.map((shape) => [shape.subjectRef, shape]));
+      const factShapeByRef = new Map(factShapes.map((shape) => [shape.subjectRef, shape]));
+      const entityRects = new Map();
+
+      const relLayer = createSvgElement('g');
+      const entityLayer = createSvgElement('g');
+      const assocLayer = createSvgElement('g');
+
+      view.entities.forEach((entity) => {
+        const shape = objectShapeByRef.get(entity.id);
+        const base = shape ? scaledRect(shape.bounds, minX, minY, scale, margin) : { x: 120, y: 120, w: 180, h: 120 };
+        const attrCount = Math.max(1, entity.attributes.length);
+        const rect = {
+          x: base.x,
+          y: base.y,
+          w: Math.max(180, estimateBarkerEntityWidth(entity)),
+          h: Math.max(70, 34 + attrCount * 20)
+        };
+        entityRects.set(entity.id, rect);
+
+        const group = createSvgElement('g');
+        group.setAttribute('data-search', `${entity.name} ${entity.attributes.map((a) => a.name).join(' ')}`.toLowerCase());
+        group.setAttribute('data-kind', 'object');
+        group.setAttribute('data-element-kind', 'object');
+        group.setAttribute('data-element-id', entity.id);
+        group.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer';
+        group.addEventListener('mousedown', (event) => {
+          if (state.editorMode === 'pan') {
+            startViewportPan(event);
+            return;
+          }
+          if (state.editorMode === 'select') startShapeDrag('objectShape', entity.id, event);
+        });
+        group.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('object', entity.id);
+        });
+
+        const box = createSvgElement('rect');
+        box.setAttribute('x', String(rect.x));
+        box.setAttribute('y', String(rect.y));
+        box.setAttribute('width', String(rect.w));
+        box.setAttribute('height', String(rect.h));
+        box.setAttribute('fill', '#ffffff');
+        box.setAttribute('stroke', '#2a2a2a');
+        box.setAttribute('stroke-width', '1.6');
+        group.appendChild(box);
+
+        const header = createSvgElement('line');
+        header.setAttribute('x1', String(rect.x));
+        header.setAttribute('y1', String(rect.y + 28));
+        header.setAttribute('x2', String(rect.x + rect.w));
+        header.setAttribute('y2', String(rect.y + 28));
+        header.setAttribute('stroke', '#2a2a2a');
+        header.setAttribute('stroke-width', '1.2');
+        group.appendChild(header);
+
+        const title = createSvgElement('text');
+        title.setAttribute('x', String(rect.x + 8));
+        title.setAttribute('y', String(rect.y + 19));
+        title.setAttribute('font-size', '14');
+        title.setAttribute('font-weight', '700');
+        title.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+        title.setAttribute('fill', '#222');
+        title.textContent = entity.name;
+        group.appendChild(title);
+
+        entity.attributes.forEach((attr, index) => {
+          const text = createSvgElement('text');
+          text.setAttribute('x', String(rect.x + 10));
+          text.setAttribute('y', String(rect.y + 48 + index * 18));
+          text.setAttribute('font-size', '12');
+          text.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+          text.setAttribute('fill', '#222');
+          text.textContent = `${attr.preferred ? '# ' : ''}${attr.mandatory ? '* ' : ''}${attr.name}`;
+          group.appendChild(text);
+        });
+
+        entityLayer.appendChild(group);
+      });
+
+      view.relationships.forEach((rel) => {
+        const left = entityRects.get(rel.leftId);
+        const right = entityRects.get(rel.rightId);
+        if (!left || !right) return;
+        const geometry = computeBarkerRelationshipGeometry(left, right);
+        const p1 = geometry.startPoint;
+        const p2 = geometry.endPoint;
+        const relGroup = createSvgElement('g');
+        relGroup.setAttribute('data-search', `${rel.leftLabel} ${rel.rightLabel}`.toLowerCase());
+        relGroup.setAttribute('data-kind', 'fact');
+        relGroup.setAttribute('data-element-kind', 'fact');
+        relGroup.setAttribute('data-element-id', rel.factId);
+        relGroup.style.cursor = 'pointer';
+        relGroup.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('fact', rel.factId);
+        });
+
+        const line = createSvgElement('line');
+        line.setAttribute('x1', String(p1.x));
+        line.setAttribute('y1', String(p1.y));
+        line.setAttribute('x2', String(p2.x));
+        line.setAttribute('y2', String(p2.y));
+        line.setAttribute('stroke', '#444');
+        line.setAttribute('stroke-width', '1.5');
+        relGroup.appendChild(line);
+
+        drawBarkerRelationshipEndNotation(relGroup, p1, geometry.direction, geometry.normal, true, rel.leftMandatory);
+        drawBarkerRelationshipEndNotation(relGroup, p2, geometry.direction, geometry.normal, false, rel.rightMandatory);
+
+        if (state.barkerShowRoleLabels) {
+          const leftOffset = getBarkerRoleLabelOffset(model, rel.factId, 'left');
+          const rightOffset = getBarkerRoleLabelOffset(model, rel.factId, 'right');
+          const leftLayout = createBarkerTextLayout(p1, geometry.direction, geometry.normal, `${rel.leftLabel} [${rel.leftCardinality}]`, true, -1, leftOffset, {
+            maxWidth: 170,
+            tangentDistance: 12,
+            normalDistance: 18,
+            lineHeight: 13
+          });
+          const rightLayout = createBarkerTextLayout(p2, geometry.direction, geometry.normal, `${rel.rightLabel} [${rel.rightCardinality}]`, false, 1, rightOffset, {
+            maxWidth: 170,
+            tangentDistance: 12,
+            normalDistance: 18,
+            lineHeight: 13
+          });
+          resolveBarkerRelationshipLabelOverlap(leftLayout, rightLayout, geometry);
+
+          relGroup.appendChild(renderBarkerMultilineText(leftLayout, {
+            fontSize: 11,
+            dataKey: `${rel.factId}:left`,
+            cursor: state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer',
+            onMouseDown: (event) => {
+              event.stopPropagation();
+              if (state.editorMode === 'pan') {
+                startViewportPan(event);
+                return;
+              }
+              if (state.editorMode === 'select') startBarkerRoleLabelDrag(rel.factId, 'left', event);
+            }
+          }));
+
+          relGroup.appendChild(renderBarkerMultilineText(rightLayout, {
+            fontSize: 11,
+            dataKey: `${rel.factId}:right`,
+            cursor: state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer',
+            onMouseDown: (event) => {
+              event.stopPropagation();
+              if (state.editorMode === 'pan') {
+                startViewportPan(event);
+                return;
+              }
+              if (state.editorMode === 'select') startBarkerRoleLabelDrag(rel.factId, 'right', event);
+            }
+          }));
+        }
+        relLayer.appendChild(relGroup);
+      });
+
+      view.associative.forEach((assoc) => {
+        const shape = factShapeByRef.get(assoc.factId);
+        const base = shape ? scaledRect(shape.bounds, minX, minY, scale, margin) : { x: 420, y: 240, w: 120, h: 42 };
+        const rect = { x: base.x, y: base.y, w: Math.max(120, assoc.name.length * 7), h: 34 };
+        const assocGroup = createSvgElement('g');
+        assocGroup.setAttribute('data-search', assoc.name.toLowerCase());
+        assocGroup.setAttribute('data-kind', 'fact');
+        assocGroup.setAttribute('data-element-kind', 'fact');
+        assocGroup.setAttribute('data-element-id', assoc.factId);
+        assocGroup.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer';
+        assocGroup.addEventListener('mousedown', (event) => {
+          if (state.editorMode === 'pan') {
+            startViewportPan(event);
+            return;
+          }
+          if (state.editorMode === 'select') startShapeDrag('factShape', assoc.factId, event);
+        });
+        assocGroup.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('fact', assoc.factId);
+        });
+
+        const box = createSvgElement('rect');
+        box.setAttribute('x', String(rect.x));
+        box.setAttribute('y', String(rect.y));
+        box.setAttribute('width', String(rect.w));
+        box.setAttribute('height', String(rect.h));
+        box.setAttribute('fill', '#f8f8f8');
+        box.setAttribute('stroke', '#555');
+        box.setAttribute('stroke-width', '1.4');
+        assocGroup.appendChild(box);
+
+        const text = createSvgElement('text');
+        text.setAttribute('x', String(rect.x + rect.w / 2));
+        text.setAttribute('y', String(rect.y + 21));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', '12');
+        text.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+        text.textContent = assoc.name;
+        assocGroup.appendChild(text);
+
+        assoc.participants.forEach((part, index) => {
+          const entity = entityRects.get(part.objectId);
+          if (!entity) return;
+          const assocCenter = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+          const entityCenter = { x: entity.x + entity.w / 2, y: entity.y + entity.h / 2 };
+          const direction = normalizeBarkerVector(entityCenter.x - assocCenter.x, entityCenter.y - assocCenter.y);
+          const normal = normalizeBarkerVector(-direction.y, direction.x);
+          const sideSign = index % 2 === 0 ? -1 : 1;
+
+          const line = createSvgElement('line');
+          line.setAttribute('x1', String(assocCenter.x));
+          line.setAttribute('y1', String(assocCenter.y));
+          line.setAttribute('x2', String(entityCenter.x));
+          line.setAttribute('y2', String(entityCenter.y));
+          line.setAttribute('stroke', '#666');
+          line.setAttribute('stroke-width', '1.3');
+          assocGroup.appendChild(line);
+
+          drawBarkerRelationshipEndNotation(assocGroup, entityCenter, direction, normal, false, part.mandatory);
+
+          if (state.barkerShowRoleLabels) {
+            const labelOffset = getBarkerRoleLabelOffset(model, assoc.factId, `assoc_${index}`);
+            const labelLayout = createBarkerTextLayout({
+              x: (assocCenter.x + entityCenter.x) / 2,
+              y: (assocCenter.y + entityCenter.y) / 2
+            }, direction, normal, `${part.label} [${part.cardinality}]`, true, sideSign, labelOffset, {
+              maxWidth: 160,
+              tangentDistance: 0,
+              normalDistance: 22,
+              lineHeight: 13
+            });
+            assocGroup.appendChild(renderBarkerMultilineText(labelLayout, {
+              fontSize: 11,
+              dataKey: `${assoc.factId}:assoc_${index}`,
+              cursor: state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer',
+              onMouseDown: (event) => {
+                event.stopPropagation();
+                if (state.editorMode === 'pan') {
+                  startViewportPan(event);
+                  return;
+                }
+                if (state.editorMode === 'select') startBarkerRoleLabelDrag(assoc.factId, `assoc_${index}`, event);
+              }
+            }));
+          }
+        });
+        assocLayer.appendChild(assocGroup);
+      });
+
+      svg.append(relLayer, assocLayer, entityLayer);
+      renderBarkerLosses(model, view);
+      applyDiagramZoom();
+    }
+
+    function ensureBarkerLayout(model) {
+      if (!model.diagram.barkerERLayout) {
+        model.diagram.barkerERLayout = { labelOffsets: {}, settings: {} };
+      }
+      if (!model.diagram.barkerERLayout.labelOffsets) model.diagram.barkerERLayout.labelOffsets = {};
+      if (!model.diagram.barkerERLayout.settings) model.diagram.barkerERLayout.settings = {};
+      return model.diagram.barkerERLayout;
+    }
+
+    function getBarkerRoleLabelOffset(model, factId, sideKey) {
+      const layout = ensureBarkerLayout(model);
+      if (!layout.labelOffsets[factId]) layout.labelOffsets[factId] = {};
+      if (!layout.labelOffsets[factId][sideKey]) layout.labelOffsets[factId][sideKey] = { dx: 0, dy: 0 };
+      return layout.labelOffsets[factId][sideKey];
+    }
+
+    function startBarkerRoleLabelDrag(factId, sideKey, event) {
+      if (event) event.preventDefault();
+      const offset = getBarkerRoleLabelOffset(state.model, factId, sideKey);
+      state.dragInfo = {
+        kind: 'barkerRoleLabel',
+        factId,
+        sideKey,
+        started: false,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startOffset: { ...offset }
+      };
+    }
+
+    function renderBarkerLosses(model, view) {
+      if (!elements.barkerLossPanel) return;
+      const losses = buildBarkerLosses(model, view);
+      elements.barkerLossPanel.innerHTML = losses.length
+        ? losses.map((item) => `<div class="reading-item"><div class="reading-text">${escapeHtml(item.title)}</div><div class="reading-meta">${escapeHtml(item.reason)}</div></div>`).join('')
+        : '<div class="empty-list">Существенных потерь информации для текущей модели не обнаружено.</div>';
+    }
+
+    function buildBarkerLosses(model, view) {
+      const losses = [];
+      if ((model.facts || []).some((fact) => (fact.roles || []).length === 1)) {
+        losses.push({
+          title: 'Унарные факты преобразуются в атрибуты/булевы признаки',
+          reason: 'Нотация Barker ER не поддерживает унарные ассоциации напрямую; по Halpin/Morgan они сворачиваются в атрибуты или подтипы, поэтому теряется исходная фактно-ролевая форма.'
+        });
+      }
+      if ((model.facts || []).some((fact) => (fact.roles || []).length >= 3)) {
+        losses.push({
+          title: 'N-арные факты бинаризуются через ассоциативную сущность',
+          reason: 'Barker ER поддерживает только бинарные связи, поэтому теряется прямая n-арная запись и вводится промежуточная сущность.'
+        });
+      }
+      if (state.barkerAbsorbValueTypes && view.entities.some((entity) => entity.attributes.some((attr) => attr.kind === 'value'))) {
+        losses.push({
+          title: 'Часть ValueType поглощена в атрибуты сущностей',
+          reason: 'При включённой опции поглощения бинарные факты EntityType → ValueType показываются как атрибуты, поэтому отдельная фактная структура скрывается.'
+        });
+      }
+      if ((model.externalConstraints || []).some((constraint) => ['SubsetConstraint', 'EqualityConstraint', 'ExclusionConstraint', 'XorConstraint', 'FrequencyConstraint', 'ExternalMandatory', 'ExternalUniqueness'].includes(constraint.renderKind))) {
+        losses.push({
+          title: 'Часть внешних ограничений не имеет полного графического аналога',
+          reason: 'Barker ER ограниченно поддерживает только mandatory/cardinality/exclusive arcs; подмножество, равенство, сложные exclusion, ring и внешние uniqueness теряют точность и требуют текстовых пояснений.'
+        });
+      }
+      if ((model.objects || []).some((object) => object.type === 'ObjectifiedType')) {
+        losses.push({
+          title: 'Объективация отображается как обычная сущность',
+          reason: 'Barker ER не имеет прямой нотации objectification, поэтому теряется явное указание на объектированный факт.'
+        });
+      }
+      if ((model.facts || []).some((fact) => fact.type === 'ImpliedFact')) {
+        losses.push({
+          title: 'Производные и подразумеваемые факты теряют статус derivation',
+          reason: 'Barker ER не имеет собственной графики для derived/semiderived фактов; они требуют текстовых примечаний.'
+        });
+      }
+      return losses;
+    }
+
+    function estimateBarkerEntityWidth(entity) {
+      const attrNames = entity.attributes.map((attr) => `${attr.preferred ? '# ' : ''}${attr.mandatory ? '* ' : ''}${attr.name}`);
+      const longest = [entity.name, ...attrNames].reduce((max, item) => Math.max(max, (item || '').length), 0);
+      return Math.max(180, longest * 7 + 28);
+    }
+
+    function downloadBusinessRulesTxt() {
+      if (!state.model) {
+        setStatus('Нет модели для сохранения бизнес-правил.', true);
+        return;
+      }
+      const items = buildBusinessRuleItems(state.model);
+      const blob = new Blob([businessRulesText(items)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(state.model.fileName || 'model').replace(/\.[^.]+$/, '')}-business-rules.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus('Бизнес-правила сохранены в TXT.');
+    }
+
+    function normalizeBusinessRulesInput() {
+      const original = elements.businessRulesInput.value || '';
+      const normalized = original
+        .replace(/\bодин\s+или\s+несколько\b/gi, 'один или более')
+        .replace(/\bноль\s+или\s+несколько\b/gi, 'ноль или более')
+        .replace(/\bне\s+больше\s+одного\b/gi, 'не более одного')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\s+\n/g, '\n');
+      if (normalized !== original) {
+        const pos = elements.businessRulesInput.selectionStart;
+        elements.businessRulesInput.value = normalized;
+        elements.businessRulesInput.selectionStart = elements.businessRulesInput.selectionEnd = Math.min(pos, normalized.length);
+      }
+    }
+
+    function getCurrentBusinessRuleLine() {
+      const value = elements.businessRulesInput.value || '';
+      const pos = elements.businessRulesInput.selectionStart || value.length;
+      const before = value.slice(0, pos);
+      const start = before.lastIndexOf('\n') + 1;
+      const after = value.slice(pos);
+      const endRel = after.indexOf('\n');
+      const end = endRel >= 0 ? pos + endRel : value.length;
+      return { text: value.slice(start, end).trim(), start, end };
+    }
+
+    function replaceCurrentBusinessRuleLine(newText) {
+      const value = elements.businessRulesInput.value || '';
+      const { start, end } = getCurrentBusinessRuleLine();
+      elements.businessRulesInput.value = `${value.slice(0, start)}${newText}${value.slice(end)}`;
+      const newPos = start + newText.length;
+      elements.businessRulesInput.focus();
+      elements.businessRulesInput.selectionStart = elements.businessRulesInput.selectionEnd = newPos;
+      updateBusinessRulesHint();
+      updateBusinessRulesDiagnostics();
+    }
+
+    function updateBusinessRulesHint() {
+      return;
+    }
+
+    function findOrCreateObjectByName(name, type = 'EntityType') {
+      const trimmed = String(name || '').trim();
+      if (!trimmed || !state.model) return null;
+      let existing = state.model.objects.find((object) => object.name === trimmed && object.type === type);
+      if (existing) return existing;
+      const objectId = generateConstraintId(type.toLowerCase());
+      const defaultRefModes = type === 'EntityType' ? ['code'] : [];
+      const object = {
+        id: objectId,
+        type,
+        name: trimmed,
+        refModes: defaultRefModes,
+        refMode: defaultRefModes[0] || '',
+        dataType: 'FixedLengthTextDataType',
+        independent: false,
+        notes: [],
+        userCreated: true
+      };
+      state.model.objects.push(object);
+      const x = 1 + ((state.model.diagram.objectShapes || []).length % 4) * 2.2;
+      const y = 1 + Math.floor((state.model.diagram.objectShapes || []).length / 4) * 1.3;
+      state.model.diagram.objectShapes.push({
+        id: `shape_${objectId}`,
+        subjectRef: objectId,
+        bounds: { x, y, w: 1.5, h: 0.52 }
+      });
+      return object;
+    }
+
+    function removeFactsFromModel(factIds) {
+      const ids = new Set(factIds.filter(Boolean));
+      if (!ids.size) return;
+      const readingIds = new Set(
+        (state.model.facts || [])
+          .filter((fact) => ids.has(fact.id))
+          .flatMap((fact) => (fact.readings || []).map((readingOrder) => readingOrder.id))
+      );
+      state.model.facts = (state.model.facts || []).filter((fact) => !ids.has(fact.id));
+      state.model.diagram.factShapes = (state.model.diagram.factShapes || []).filter((shape) => !ids.has(shape.subjectRef));
+      state.model.diagram.readingShapes = (state.model.diagram.readingShapes || []).filter((shape) => !ids.has(shape.factId) && !readingIds.has(shape.subjectRef));
+      state.model.externalConstraints = (state.model.externalConstraints || []).filter((constraint) => !ids.has(constraint.factId));
+    }
+
+    function ensureUnaryFact(entityObject, predicate) {
+      const matches = (state.model.facts || []).filter((candidate) => {
+        const roles = candidate.roles || [];
+        const readingTemplate = candidate.readings?.[0]?.readings?.[0]?.template || '';
+        return roles.length === 1
+          && roles[0].playerRef === entityObject.id
+          && (roleDisplayName(roles[0], 0) === predicate || readingTemplate === `{0} ${predicate}` || candidate.name === `${entityObject.name}${predicate}`);
+      });
+      if (matches.length) {
+        const [first, ...rest] = matches;
+        if (rest.length) {
+          removeFactsFromModel(rest.map((fact) => fact.id));
+        }
+        return first;
+      }
+
+      const factId = generateConstraintId('fact');
+      const roleId = generateConstraintId('role');
+      const readingOrderId = generateConstraintId('readingOrder');
+      const readingId = generateConstraintId('reading');
+      fact = {
+        id: factId,
+        type: 'Fact',
+        name: `${entityObject.name}${predicate}`,
+        roles: [{ id: roleId, actualRoleId: roleId, isProxy: false, factId, factRoleIndex: 0, playerRef: entityObject.id, playerName: entityObject.name, IsMandatory: false, mandatory: false, Multiplicity: 'Unspecified', multiplicity: 'Unspecified', name: predicate }],
+        readings: [{ id: readingOrderId, factId, roleSequence: [roleId], readings: [{ id: readingId, template: `{0} ${predicate}`, verbalized: `${entityObject.name} ${predicate}`, roleNames: [entityObject.name] }] }],
+        internalConstraintRefs: [],
+        uniquenessConstraints: []
+      };
+      state.model.facts.push(fact);
+      const objectShape = (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === entityObject.id);
+      const factX = (objectShape?.bounds.x || 1) + 0.3;
+      const factY = (objectShape?.bounds.y || 1) + 0.9;
+      state.model.diagram.factShapes.push({ id: `shape_${factId}`, subjectRef: factId, bounds: { x: factX, y: factY, w: 0.3, h: 0.32 } });
+      state.model.diagram.readingShapes.push({ id: `readingshape_${factId}`, subjectRef: readingOrderId, factId, parentFactShapeId: `shape_${factId}`, bounds: { x: factX - 0.6, y: factY + 0.42, w: 1.8, h: 0.25 }, text: `{0} ${predicate}` });
+      return fact;
+    }
+
+    function ensureTernaryFactFromObjects(objects, predicate = 'связан') {
+      if (!Array.isArray(objects) || objects.length !== 3) return null;
+      const names = objects.map((object) => object.name);
+      let fact = findMatchingTernaryFact(names);
+      if (fact) return fact;
+      const factId = generateConstraintId('fact');
+      const roleIds = objects.map(() => generateConstraintId('role'));
+      const readingOrderId = generateConstraintId('readingOrder');
+      const readingId = generateConstraintId('reading');
+      const template = `{0} ${predicate} {1} и {2}`;
+      fact = {
+        id: factId,
+        type: 'Fact',
+        name: `${names[0]}${predicate}${names[1]}${names[2]}`,
+        roles: objects.map((object, index) => ({
+          id: roleIds[index],
+          actualRoleId: roleIds[index],
+          isProxy: false,
+          factId,
+          factRoleIndex: index,
+          playerRef: object.id,
+          playerName: object.name,
+          IsMandatory: false,
+          mandatory: false,
+          Multiplicity: 'Unspecified',
+          multiplicity: 'Unspecified',
+          name: index === 0 ? predicate : `role${index + 1}`
+        })),
+        readings: [{ id: readingOrderId, factId, roleSequence: roleIds, readings: [{ id: readingId, template, verbalized: template.replace('{0}', names[0]).replace('{1}', names[1]).replace('{2}', names[2]), roleNames: names }] }],
+        internalConstraintRefs: [],
+        uniquenessConstraints: []
+      };
+      state.model.facts.push(fact);
+      const objectShapes = objects.map((object) => (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === object.id)).filter(Boolean);
+      const avgX = objectShapes.length ? objectShapes.reduce((sum, shape) => sum + shape.bounds.x, 0) / objectShapes.length : 1.5;
+      const maxY = objectShapes.length ? Math.max(...objectShapes.map((shape) => shape.bounds.y)) : 1.5;
+      state.model.diagram.factShapes.push({ id: `shape_${factId}`, subjectRef: factId, bounds: { x: avgX + 0.2, y: maxY + 0.8, w: 0.95, h: 0.34 } });
+      state.model.diagram.readingShapes.push({ id: `readingshape_${factId}`, subjectRef: readingOrderId, factId, parentFactShapeId: `shape_${factId}`, bounds: { x: avgX - 1.0, y: maxY + 1.26, w: 3.2, h: 0.25 }, text: template });
+      return fact;
+    }
+
+    function ensureBinaryFact(leftObject, predicate, rightObject, kind = 'entity-entity') {
+      const matches = (state.model.facts || []).filter((candidate) => {
+        const roles = candidate.roles || [];
+        const readingTemplate = candidate.readings?.[0]?.readings?.[0]?.template || '';
+        return roles.length === 2
+          && roles[0].playerRef === leftObject.id
+          && roles[1].playerRef === rightObject.id
+          && (roleDisplayName(roles[0], 0) === predicate || readingTemplate.includes(predicate) || candidate.name === `${leftObject.name}${predicate}${rightObject.name}`);
+      });
+      if (matches.length) {
+        const [first, ...rest] = matches;
+        if (rest.length) {
+          removeFactsFromModel(rest.map((fact) => fact.id));
+        }
+        return first;
+      }
+
+      const factId = generateConstraintId('fact');
+      const role1Id = generateConstraintId('role');
+      const role2Id = generateConstraintId('role');
+      const readingOrderId = generateConstraintId('readingOrder');
+      const readingId = generateConstraintId('reading');
+      const role1Name = predicate;
+      const role2Name = kind === 'entity-value' ? 'относится к' : predicate;
+      const template = kind === 'entity-value' ? '{0} имеет атрибут {1}' : `{0} ${predicate} {1}`;
+      fact = {
+        id: factId,
+        type: 'Fact',
+        name: `${leftObject.name}${predicate}${rightObject.name}`,
+        roles: [
+          { id: role1Id, actualRoleId: role1Id, isProxy: false, factId, factRoleIndex: 0, playerRef: leftObject.id, playerName: leftObject.name, IsMandatory: false, mandatory: false, Multiplicity: 'Unspecified', multiplicity: 'Unspecified', name: role1Name },
+          { id: role2Id, actualRoleId: role2Id, isProxy: false, factId, factRoleIndex: 1, playerRef: rightObject.id, playerName: rightObject.name, IsMandatory: false, mandatory: false, Multiplicity: 'Unspecified', multiplicity: 'Unspecified', name: role2Name }
+        ],
+        readings: [{ id: readingOrderId, factId, roleSequence: [role1Id, role2Id], readings: [{ id: readingId, template, verbalized: template.replace('{0}', leftObject.name).replace('{1}', rightObject.name), roleNames: [leftObject.name, rightObject.name] }] }],
+        internalConstraintRefs: [],
+        uniquenessConstraints: []
+      };
+      state.model.facts.push(fact);
+      const leftShape = (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === leftObject.id);
+      const rightShape = (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === rightObject.id);
+      const midX = ((leftShape?.bounds.x || 0) + (rightShape?.bounds.x || 2)) / 2 + 0.2;
+      const midY = Math.max(leftShape?.bounds.y || 1, rightShape?.bounds.y || 1) + 0.9;
+      state.model.diagram.factShapes.push({ id: `shape_${factId}`, subjectRef: factId, bounds: { x: midX, y: midY, w: 0.6, h: 0.32 } });
+      state.model.diagram.readingShapes.push({ id: `readingshape_${factId}`, subjectRef: readingOrderId, factId, parentFactShapeId: `shape_${factId}`, bounds: { x: midX - 0.8, y: midY + 0.45, w: 2.4, h: 0.25 }, text: template });
+      return fact;
+    }
+
+    function findMatchingBinaryFact(leftName, rightName, predicate = null) {
+      return (state.model?.facts || []).find((fact) => {
+        const roles = fact.roles || [];
+        if (roles.length !== 2) return false;
+        const leftObject = state.model.objectById.get(roles[0].playerRef);
+        const rightObject = state.model.objectById.get(roles[1].playerRef);
+        if (!leftObject || !rightObject) return false;
+        if (leftObject.name !== leftName || rightObject.name !== rightName) return false;
+        if (predicate && roleDisplayName(roles[0], 0) !== predicate) return false;
+        return true;
+      }) || null;
+    }
+
+    function ensureOrFindBinaryFactForConstraint(subjectName, predicate, objectName) {
+      let fact = findMatchingBinaryFact(subjectName, objectName, predicate) || findMatchingBinaryFact(subjectName, objectName);
+      if (fact) {
+        const role = fact.roles?.[0];
+        if (role && predicate) role.name = predicate;
+        return { fact, roleIndex: 0 };
+      }
+
+      fact = findMatchingBinaryFact(objectName, subjectName);
+      if (fact) {
+        const role = fact.roles?.[1];
+        if (role && predicate) role.name = predicate;
+        return { fact, roleIndex: 1 };
+      }
+
+      const subject = findOrCreateObjectByName(subjectName, 'EntityType');
+      const objectExisting = state.model.objects.find((obj) => obj.name === objectName);
+      const object = objectExisting || findOrCreateObjectByName(objectName, 'EntityType');
+      if (!subject || !object) return null;
+      const kind = object.type === 'ValueType' ? 'entity-value' : 'entity-entity';
+      fact = ensureBinaryFact(subject, predicate, object, kind);
+      return fact ? { fact, roleIndex: 0 } : null;
+    }
+
+    function findMatchingTernaryFact(entityNames) {
+      if (!Array.isArray(entityNames) || entityNames.length !== 3) return null;
+      return (state.model?.facts || []).find((fact) => {
+        const roles = fact.roles || [];
+        if (roles.length !== 3) return false;
+        const roleNames = roles.map((role) => state.model.objectById.get(role.playerRef)?.name || role.playerName);
+        return roleNames[0] === entityNames[0] && roleNames[1] === entityNames[1] && roleNames[2] === entityNames[2];
+      }) || null;
+    }
+
+    function applyBinaryRoleConstraints(fact, roleIndex, { mandatory = null, unique = null }) {
+      const role = fact?.roles?.[roleIndex];
+      if (!role) return false;
+      let changed = false;
+      if (mandatory !== null) {
+        const current = !!(role.IsMandatory || role.mandatory);
+        if (current !== mandatory) {
+          role.IsMandatory = mandatory;
+          role.mandatory = mandatory;
+          changed = true;
+        }
+      }
+      if (unique !== null) {
+        const actualRoleRef = role.id || role.actualRoleId;
+        const hasUnique = hasSingleRoleUniqueness(fact, actualRoleRef);
+        if (hasUnique !== unique) {
+          setRoleUniqueness(actualRoleRef, unique, { skipHistory: true, silent: true, skipMultiplicity: true });
+          changed = true;
+        }
+      }
+      if (changed) {
+        const uniqueNow = hasSingleRoleUniqueness(fact, role.id || role.actualRoleId);
+        syncRoleMultiplicityFromFlags(role, uniqueNow);
+        reconcileBinaryFactCompositeUniqueness(fact);
+      }
+      return changed;
+    }
+
+    function parseBusinessRuleStatements(text) {
+      return String(text || '')
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.replace(/[.。]+$/g, '').trim())
+        .filter(Boolean);
+    }
+
+    const EACH_WORDS_RE = '(?:Каждый|Каждая|Каждое|Каждые)';
+    const QUANTITY_RE = '(?:только\s+один|только\s+одна|только\s+одно|ровно\s+один|ровно\s+одна|ровно\s+одно|один|одна|одно|один\s+или\s+несколько|одна\s+или\s+несколько|одно\s+или\s+несколько|один\s+или\s+более|одна\s+или\s+более|одно\s+или\s+более|по\s+меньшей\s+мере\s+один|по\s+меньшей\s+мере\s+одна|по\s+меньшей\s+мере\s+одно|не\s+более\s+одного|не\s+более\s+одной|не\s+более\s+одного|ноль\s+или\s+один|ноль\s+или\s+одна|ноль\s+или\s+одно|ноль\s+или\s+несколько|ноль\s+или\s+более)';
+
+    function quantityPhraseToConstraintConfig(quantity) {
+      const q = String(quantity || '').trim().toLowerCase();
+      if (/^(только|ровно)\s+(один|одна|одно)$/.test(q) || /^(один|одна|одно)$/.test(q)) return { mandatory: true, unique: true };
+      if (/^(один|одна|одно)\s+или\s+(несколько|более)$/.test(q) || /^по\s+меньшей\s+мере\s+(один|одна|одно)$/.test(q)) return { mandatory: true, unique: false };
+      if (/^не\s+более\s+одн(ого|ой)$/.test(q) || /^ноль\s+или\s+(один|одна|одно)$/.test(q)) return { mandatory: false, unique: true };
+      if (/^ноль\s+или\s+(несколько|более)$/.test(q)) return { mandatory: false, unique: false };
+      return null;
+    }
+
+    function collectSeedObjectNames(statements) {
+      const names = new Set((state.model?.objects || []).map((object) => object.name).filter(Boolean));
+      statements.forEach((statement) => {
+        const keyMatch = statement.match(/^(.+?)\s+определяется\s+через\s+\{\s*(.+?)\s*\}$/i);
+        if (keyMatch) names.add(keyMatch[1].trim());
+        const attrMatch = statement.match(/^(.+?)\s+имеет\s+атрибут\s+(.+)$/i);
+        if (attrMatch) {
+          names.add(attrMatch[1].trim());
+          names.add(attrMatch[2].trim());
+        }
+      });
+      return [...names].sort((a, b) => b.length - a.length);
+    }
+
+    function escapeRegex(text) {
+      return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function findEntityOccurrencesInStatement(statement, knownNames) {
+      const source = String(statement || '');
+      const lower = source.toLowerCase();
+      const used = [];
+      const results = [];
+      (knownNames || []).forEach((name) => {
+        const lowerName = String(name || '').toLowerCase();
+        let index = lower.indexOf(lowerName);
+        while (index >= 0) {
+          const overlap = used.some((item) => !(index + lowerName.length <= item.start || index >= item.end));
+          if (!overlap) {
+            used.push({ start: index, end: index + lowerName.length });
+            results.push({ name, index, end: index + lowerName.length });
+            break;
+          }
+          index = lower.indexOf(lowerName, index + 1);
+        }
+      });
+      return results.sort((a, b) => a.index - b.index);
+    }
+
+    function findFirstQuantityOccurrence(statement, fromIndex = 0) {
+      const regex = new RegExp(QUANTITY_RE, 'ig');
+      regex.lastIndex = fromIndex;
+      const match = regex.exec(statement);
+      if (!match) return null;
+      return { text: match[0], index: match.index, end: match.index + match[0].length };
+    }
+
+    function parseQuantifiedFactLikeStatement(statement, knownNames) {
+      const quantity = findFirstQuantityOccurrence(statement, 0);
+      if (!quantity) return null;
+      const occurrences = findEntityOccurrencesInStatement(statement, knownNames || []);
+      if (occurrences.length < 2) return null;
+      const subject = occurrences[0];
+      const between = occurrences.filter((item) => item.index > subject.end && item.end <= quantity.index);
+      let object = between.length ? between[between.length - 1] : occurrences.find((item) => item.index >= quantity.end);
+      if (!object || object.name === subject.name) return null;
+      const predicateStart = subject.end;
+      const predicateEnd = between.length ? object.index : quantity.index;
+      const predicate = statement.slice(predicateStart, predicateEnd).trim();
+      if (!predicate) return null;
+      return { left: subject.name, predicate, right: object.name, quantity: quantity.text };
+    }
+
+    function analyzeBusinessRuleStatement(statement) {
+      const knownNames = collectSeedObjectNames(parseBusinessRuleStatements(elements.businessRulesInput?.value || ''));
+      let m = statement.match(/^(.+?)\s+определяется\s+через\s+\{\s*(.+?)\s*\}$/i);
+      if (m) return { ok: true, kind: 'entity-keys', message: 'Определение сущности через ключи', actions: [`Будет создана или обновлена сущность «${m[1].trim()}»`, `Будут заданы ключи: ${m[2].trim()}`] };
+
+      m = statement.match(/^(.+?)\s+имеет\s+атрибут\s+(.+)$/i);
+      if (m) return { ok: true, kind: 'entity-attribute', message: 'Связь EntityType → ValueType', actions: [`Будет создан или обновлён бинарный факт: ${m[1].trim()} имеет атрибут ${m[2].trim()}`] };
+
+      m = statement.match(new RegExp(`^${EACH_WORDS_RE}\\s+(.+?)\\s+(.+?)\\s+(${QUANTITY_RE})\\s+(.+)$`, 'i'));
+      if (m) return { ok: true, kind: 'quantified-binary', message: `Правило вывода с ограничением «${m[3]}»`, fragment: m[3], actions: [`Будет найден или создан факт для: ${statement}`, `Будут применены ограничения: ${m[3]}`] };
+
+      const quantifiedFactLike = parseQuantifiedFactLikeStatement(statement, knownNames);
+      if (quantifiedFactLike && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+        return { ok: true, kind: 'quantified-inline', message: `Правило с количественным ограничением «${quantifiedFactLike.quantity}»`, fragment: quantifiedFactLike.quantity, actions: [`Будет найден или создан бинарный факт: ${quantifiedFactLike.left} ${quantifiedFactLike.predicate} ${quantifiedFactLike.right}`, `Будут применены ограничения: ${quantifiedFactLike.quantity}`] };
+      }
+      if (findFirstQuantityOccurrence(statement, 0) && !quantifiedFactLike && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+        return { ok: false, kind: 'error', message: 'Обнаружено количественное ограничение, но не удалось корректно определить обе сущности вокруг него.', fragment: findFirstQuantityOccurrence(statement, 0)?.text || statement };
+      }
+
+      m = statement.match(/^Возможно,\s+что\s+некоторый\s+(.+?)\s+не\s+(.+?)\s+ни\s+одного\s+(.+)$/i);
+      if (m) return { ok: true, kind: 'possible-none', message: 'Правило вывода: необязательное участие', fragment: `не ${m[2]} ни одного`, actions: [`Будет найден или создан факт для ${m[1].trim()} и ${m[3].trim()}`, 'Роль будет сделана необязательной'] };
+
+      m = statement.match(/^Возможно,\s+что\s+некоторый\s+(.+?)\s+(.+?)\s+более\s+одного\s+(.+)$/i);
+      if (m) return { ok: true, kind: 'possible-many', message: 'Правило вывода: множественное участие', fragment: `более одного ${m[3].trim()}`, actions: [`Будет найден или создан факт: ${m[1].trim()} ${m[2].trim()} ${m[3].trim()}`, 'Для роли будет снята уникальность'] };
+
+      m = statement.match(/^Возможно,\s+один\s+(.+?)\s+относится\s+к\s+одной\s+или\s+более\s+сущностям\s+(.+)$/i);
+      if (m) return { ok: true, kind: 'possible-reverse-many', message: 'Правило вывода: обратная множественность', fragment: 'относится к одной или более сущностям', actions: [`Будет найден или создан факт между ${m[2].trim()} и ${m[1].trim()}`, 'Для обратной роли будет снята уникальность'] };
+
+      m = statement.match(/^Для\s+каждой\s+(.+?)\s+и\s+(.+?)\s+такая\s+ассоциация\s+(.+?)\s+определяет\s+не\s+более\s+одного\s+(.+?)\s+Эта\s+ассоциация\s+с\s+(.+?)\s+задаёт\s+предпочтительную\s+схему\s+идентификации\s+для\s+(.+)$/i);
+      if (m) return { ok: true, kind: 'preferred-composite', message: 'Предпочтительная составная идентификация', fragment: 'предпочтительную схему идентификации', actions: [`Будет найден или создан тернарный факт с участием ${m[1].trim()}, ${m[2].trim()} и ${m[4].trim()}`, `Будет создан preferred uniqueness для ${m[6].trim()}`] };
+
+      m = statement.match(/^(.+?)\s+(.+?)\s+(.+?)\s+и\s+(.+)$/i);
+      if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+        return { ok: true, kind: 'ternary-generic', message: 'Тернарный факт', actions: [`Будет создан или обновлён тернарный факт: ${m[1].trim()} ${m[2].trim()} ${m[3].trim()} и ${m[4].trim()}`] };
+      }
+
+      m = statement.match(/^(.+?)\s+(.+?)\s+(.+)$/i);
+      if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+        return { ok: true, kind: 'binary-generic', message: 'Бинарный факт', actions: [`Будет создан или обновлён бинарный факт: ${m[1].trim()} ${m[2].trim()} ${m[3].trim()}`] };
+      }
+
+      m = statement.match(/^(.+?)\s+([^\s].+)$/i);
+      if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/\s+имеет\s+атрибут\s+/i.test(statement) && !/\s+определяется\s+через\s+/i.test(statement)) {
+        return { ok: true, kind: 'unary', message: 'Унарный факт', actions: [`Будет создан или обновлён унарный факт: ${m[1].trim()} ${m[2].trim()}`] };
+      }
+
+      if (/^Кажд/i.test(statement)) return { ok: false, kind: 'error', message: 'Не удалось распознать шаблон правила вида «Каждый/Каждая/Каждое/Каждые ...»', fragment: statement.split(/\s+/).slice(0, 4).join(' ') };
+      if (/^Возможно/i.test(statement)) return { ok: false, kind: 'error', message: 'Не удалось распознать шаблон правила вида «Возможно ...»', fragment: statement.split(/\s+/).slice(0, 5).join(' ') };
+      return { ok: false, kind: 'error', message: 'Не удалось распознать правило. Проверьте шаблон предложения.', fragment: statement };
+    }
+
+    function highlightBusinessRuleFragment(statement, fragment) {
+      const safe = escapeHtml(statement);
+      if (!fragment) return safe;
+      const idx = statement.toLowerCase().indexOf(String(fragment).toLowerCase());
+      if (idx < 0) return safe;
+      const before = escapeHtml(statement.slice(0, idx));
+      const middle = escapeHtml(statement.slice(idx, idx + fragment.length));
+      const after = escapeHtml(statement.slice(idx + fragment.length));
+      return `${before}<span class="rule-predicate">${middle}</span>${after}`;
+    }
+
+    function updateBusinessRulesDiagnostics() {
+      const current = getCurrentBusinessRuleLine().text;
+      if (!current) {
+        elements.businessRulesDiagnostics.innerHTML = '<div class="empty-list">Диагностика текущего правила пока пуста.</div>';
+        elements.businessRulesPreview.innerHTML = '<div class="empty-list">Предпросмотр применения для текущего правила пока пуст.</div>';
+        return;
+      }
+      const result = analyzeBusinessRuleStatement(current);
+      const lineHtml = highlightBusinessRuleFragment(current, result.fragment || '');
+      elements.businessRulesDiagnostics.innerHTML = `<div class="${result.ok ? 'ok' : 'error'}">${result.ok ? 'OK' : 'Ошибка'}: ${lineHtml} — ${escapeHtml(result.message)}</div>`;
+      updateBusinessRulesPreview(current, result);
+    }
+
+    function updateBusinessRulesPreview(statement, result) {
+      if (!statement) {
+        elements.businessRulesPreview.innerHTML = '<div class="empty-list">Предпросмотр применения для текущего правила пока пуст.</div>';
+        return;
+      }
+      if (!result.ok) {
+        elements.businessRulesPreview.innerHTML = `<div class="error">Не будет применено: ${escapeHtml(statement)}</div>`;
+        return;
+      }
+      const actions = result.actions || [];
+      elements.businessRulesPreview.innerHTML = `<div class="ok"><strong>${escapeHtml(statement)}</strong><br>${actions.length ? actions.map((action) => `• ${escapeHtml(action)}`).join('<br>') : '• Правило распознано'}</div>`;
+    }
+
+    function parseBusinessRuleIntents(statements) {
+      const intents = { facts: [], constraints: [], errors: [] };
+      const knownNames = collectSeedObjectNames(statements);
+
+      statements.forEach((statement) => {
+        let m = statement.match(/^(.+?)\s+определяется\s+через\s+\{\s*(.+?)\s*\}$/i);
+        if (m) {
+          intents.facts.push({ kind: 'entity-keys', entityName: m[1].trim(), keys: parseRefModesInput(m[2].replace(/\./g, '')) });
+          return;
+        }
+
+        m = statement.match(/^(.+?)\s+имеет\s+атрибут\s+(.+)$/i);
+        if (m) {
+          intents.facts.push({ kind: 'entity-attribute', entityName: m[1].trim(), valueTypeName: m[2].trim() });
+          return;
+        }
+
+        m = statement.match(new RegExp(`^${EACH_WORDS_RE}\\s+(.+?)\\s+(.+?)\\s+(${QUANTITY_RE})\\s+(.+)$`, 'i'));
+        if (m) {
+          const cfg = quantityPhraseToConstraintConfig(m[3]);
+          const tail = statement.replace(new RegExp(`^${EACH_WORDS_RE}\\s+`, 'i'), '');
+          const flexible = parseQuantifiedFactLikeStatement(tail, knownNames);
+          if (flexible) {
+            intents.constraints.push({ kind: 'quantified-binary', subject: flexible.left, predicate: flexible.predicate, object: flexible.right, mandatory: cfg?.mandatory ?? null, unique: cfg?.unique ?? null, quantity: m[3] });
+          } else {
+            intents.constraints.push({ kind: 'quantified-binary', subject: m[1].trim(), predicate: m[2].trim(), object: m[4].trim(), mandatory: cfg?.mandatory ?? null, unique: cfg?.unique ?? null, quantity: m[3] });
+          }
+          return;
+        }
+
+        m = statement.match(/^Возможно,\s+что\s+некоторый\s+(.+?)\s+не\s+(.+?)\s+ни\s+одного\s+(.+)$/i);
+        if (m) {
+          intents.constraints.push({ kind: 'binary-forward', subject: m[1].trim(), predicate: m[2].trim(), object: m[3].trim(), mandatory: false, unique: null });
+          return;
+        }
+
+        m = statement.match(/^Возможно,\s+что\s+некоторый\s+(.+?)\s+(.+?)\s+более\s+одного\s+(.+)$/i);
+        if (m) {
+          intents.constraints.push({ kind: 'binary-forward', subject: m[1].trim(), predicate: m[2].trim(), object: m[3].trim(), mandatory: null, unique: false });
+          return;
+        }
+
+        m = statement.match(/^Возможно,\s+один\s+(.+?)\s+относится\s+к\s+одной\s+или\s+более\s+сущностям\s+(.+)$/i);
+        if (m) {
+          intents.constraints.push({ kind: 'binary-reverse', subject: m[1].trim(), predicate: 'относится к', object: m[2].trim(), mandatory: null, unique: false });
+          return;
+        }
+
+        const quantifiedFactLike = parseQuantifiedFactLikeStatement(statement, knownNames);
+        if (quantifiedFactLike && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+          const cfg = quantityPhraseToConstraintConfig(quantifiedFactLike.quantity);
+          intents.constraints.push({ kind: 'quantified-inline-binary', subject: quantifiedFactLike.left, predicate: quantifiedFactLike.predicate, object: quantifiedFactLike.right, mandatory: cfg?.mandatory ?? null, unique: cfg?.unique ?? null, quantity: quantifiedFactLike.quantity });
+          return;
+        }
+        if (findFirstQuantityOccurrence(statement, 0) && !quantifiedFactLike && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+          intents.errors.push(statement);
+          return;
+        }
+
+        m = statement.match(/^Для\s+каждой\s+(.+?)\s+и\s+(.+?)\s+такая\s+ассоциация\s+(.+?)\s+определяет\s+не\s+более\s+одного\s+(.+?)\s+Эта\s+ассоциация\s+с\s+(.+?)\s+задаёт\s+предпочтительную\s+схему\s+идентификации\s+для\s+(.+)$/i);
+        if (m) {
+          intents.constraints.push({
+            kind: 'preferred-composite',
+            left: m[1].trim(),
+            middle: m[2].trim(),
+            association: m[3].trim(),
+            target: m[4].trim(),
+            preferredFor: m[6].trim()
+          });
+          return;
+        }
+
+        m = statement.match(/^(.+?)\s+(.+?)\s+(.+?)\s+и\s+(.+)$/i);
+        if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+          intents.facts.push({ kind: 'ternary-generic', first: m[1].trim(), predicate: m[2].trim(), second: m[3].trim(), third: m[4].trim() });
+          return;
+        }
+
+        m = statement.match(/^(.+?)\s+(.+?)\s+(.+)$/i);
+        if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/^Для\s+кажд/i.test(statement)) {
+          intents.facts.push({ kind: 'binary-generic', left: m[1].trim(), predicate: m[2].trim(), right: m[3].trim() });
+          return;
+        }
+
+        m = statement.match(/^(.+?)\s+([^\s].+)$/i);
+        if (m && !/^Кажд/i.test(statement) && !/^Возможно/i.test(statement) && !/\s+имеет\s+атрибут\s+/i.test(statement) && !/\s+определяется\s+через\s+/i.test(statement)) {
+          intents.facts.push({ kind: 'unary', entityName: m[1].trim(), predicate: m[2].trim() });
+          return;
+        }
+
+        intents.errors.push(statement);
+      });
+
+      return intents;
+    }
+
+    function ensureFactFromIntent(intent) {
+      if (intent.kind === 'entity-keys') {
+        const entity = findOrCreateObjectByName(intent.entityName, 'EntityType');
+        if (entity) {
+          entity.refModes = intent.keys;
+          entity.refMode = intent.keys[0] || '';
+          return true;
+        }
+        return false;
+      }
+      if (intent.kind === 'entity-attribute') {
+        const entity = findOrCreateObjectByName(intent.entityName, 'EntityType');
+        const valueType = findOrCreateObjectByName(intent.valueTypeName, 'ValueType');
+        if (entity && valueType) {
+          ensureBinaryFact(entity, 'имеет', valueType, 'entity-value');
+          return true;
+        }
+        return false;
+      }
+      if (intent.kind === 'binary-generic') {
+        const left = findOrCreateObjectByName(intent.left, 'EntityType');
+        const rightExisting = state.model.objects.find((object) => object.name === intent.right);
+        const right = rightExisting || findOrCreateObjectByName(intent.right, 'EntityType');
+        if (left && right) {
+          const kind = right.type === 'ValueType' ? 'entity-value' : 'entity-entity';
+          ensureBinaryFact(left, intent.predicate, right, kind);
+          return true;
+        }
+        return false;
+      }
+      if (intent.kind === 'ternary-generic') {
+        const first = findOrCreateObjectByName(intent.first, 'EntityType');
+        const second = findOrCreateObjectByName(intent.second, 'EntityType');
+        const third = findOrCreateObjectByName(intent.third, 'EntityType');
+        if (first && second && third) {
+          ensureTernaryFactFromObjects([first, second, third], intent.predicate);
+          return true;
+        }
+        return false;
+      }
+      if (intent.kind === 'unary') {
+        const entity = findOrCreateObjectByName(intent.entityName, 'EntityType');
+        if (entity) {
+          ensureUnaryFact(entity, intent.predicate);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function applyConstraintIntent(intent) {
+      if (intent.kind === 'binary-forward' || intent.kind === 'quantified-binary' || intent.kind === 'quantified-inline-binary') {
+        const resolved = ensureOrFindBinaryFactForConstraint(intent.subject, intent.predicate, intent.object);
+        if (resolved?.fact) return applyBinaryRoleConstraints(resolved.fact, resolved.roleIndex, { mandatory: intent.mandatory, unique: intent.unique });
+        return false;
+      }
+      if (intent.kind === 'binary-reverse') {
+        const resolved = ensureOrFindBinaryFactForConstraint(intent.object, intent.predicate, intent.subject);
+        if (resolved?.fact) {
+          const index = resolved.roleIndex === 0 ? 1 : 0;
+          if (resolved.fact.roles?.[index]) resolved.fact.roles[index].name = intent.predicate;
+          return applyBinaryRoleConstraints(resolved.fact, index, { mandatory: intent.mandatory, unique: intent.unique });
+        }
+        return false;
+      }
+      if (intent.kind === 'preferred-composite') {
+        const left = findOrCreateObjectByName(intent.left, 'EntityType');
+        const middle = findOrCreateObjectByName(intent.middle, 'EntityType');
+        const target = findOrCreateObjectByName(intent.target, 'EntityType');
+        if (!left || !middle || !target) return false;
+        let fact = findMatchingTernaryFact([left.name, middle.name, target.name]);
+        if (!fact) {
+          fact = ensureTernaryFactFromObjects([left, middle, target], intent.association || 'связан');
+        }
+        const preferredRoleRefs = (fact.roles || []).slice(0, 2).map((role) => role.id || role.actualRoleId);
+        const key = normalizedRoleRefKey(preferredRoleRefs);
+        let constraint = (fact.uniquenessConstraints || []).find((item) => normalizedRoleRefKey(item.roleRefs || []) === key);
+        if (!constraint) {
+          constraint = {
+            id: generateConstraintId('intuc'),
+            name: 'UserPreferredInternalUC',
+            roleRefs: preferredRoleRefs,
+            preferred: true,
+            preferredForRef: target.id,
+            isInternal: true,
+            isSimple: false,
+            isImplied: false,
+            type: 'UniquenessConstraint',
+            userCreated: true
+          };
+          fact.uniquenessConstraints.push(constraint);
+          state.model.constraintsCount += 1;
+        } else {
+          constraint.preferred = true;
+          constraint.preferredForRef = target.id;
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function applyBusinessRulesText() {
+      if (!state.model) {
+        setStatus('Сначала создайте или загрузите модель.', true);
+        return;
+      }
+      const statements = parseBusinessRuleStatements(elements.businessRulesInput.value);
+      if (!statements.length) {
+        setStatus('Введите хотя бы одно правило.', true);
+        return;
+      }
+
+      const intents = parseBusinessRuleIntents(statements);
+      pushHistorySnapshot();
+      let changed = false;
+
+      intents.facts.forEach((intent) => {
+        changed = ensureFactFromIntent(intent) || changed;
+      });
+
+      rebuildModelCaches(state.model);
+
+      intents.constraints.forEach((intent) => {
+        changed = applyConstraintIntent(intent) || changed;
+      });
+
+      rebuildModelCaches(state.model);
+      renderModel(state.model);
+      elements.businessRulesInput.value = '';
+      updateBusinessRulesHint();
+      updateBusinessRulesCurrentLineHighlight();
+      if (intents.errors.length) {
+        setStatus(`Часть правил не распознана: ${intents.errors.length}.`, true);
+      } else if (changed) {
+        setStatus('Текстовые правила применены к диаграмме.');
+      } else {
+        setStatus('Изменения по правилам не обнаружены.');
+      }
+    }
+
+
+    function renderDiagram(model) {
+      if (state.notationMode === 'barker') {
+        renderBarkerERDiagram(model);
+        return;
+      }
+
+      const svg = elements.diagramSvg;
+      svg.innerHTML = '';
+
+      const objectShapes = model.diagram.objectShapes || [];
+      const factShapes = model.diagram.factShapes || [];
+      const readingShapes = model.diagram.readingShapes || [];
+
+      const scale = 170;
+
+      elements.diagramTitle.textContent = 'Диаграмма ORM';
+      if (!objectShapes.length && !factShapes.length) {
+        const width = 1200;
+        const height = 800;
+        state.lastDiagramMetrics = { width, height };
+        state.diagramTransform = { scale, margin: 40, minX: 0, minY: 0 };
+        elements.diagramEmpty.classList.remove('hidden');
+        elements.diagramMeta.textContent = '0 objects • 0 facts';
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.setAttribute('width', String(width));
+        svg.setAttribute('height', String(height));
+        elements.diagramStage.style.width = `${width}px`;
+        elements.diagramStage.style.height = `${height}px`;
+
+        const bg = createSvgElement('rect');
+        bg.setAttribute('x', '0');
+        bg.setAttribute('y', '0');
+        bg.setAttribute('width', String(width));
+        bg.setAttribute('height', String(height));
+        bg.setAttribute('fill', '#ffffff');
+        bg.setAttribute('data-canvas-bg', 'true');
+        bg.addEventListener('mousedown', (event) => {
+          state.selectedConstraintId = null;
+          renderConstraintEditorState();
+          if (state.editorMode === 'pan' && event.button === 0) {
+            startViewportPan(event);
+            return;
+          }
+          if (state.editorMode === 'select' && event.button === 0) {
+            if (event.shiftKey) {
+              startMarqueeSelection(event);
+            } else {
+              startViewportPan(event);
+            }
+          }
+        });
+        svg.appendChild(bg);
+        applyDiagramZoom();
+        return;
+      }
+
+      const margin = 40;
+      const allBounds = [...objectShapes, ...factShapes].map((item) => item.bounds);
+      const xs = allBounds.flatMap((b) => [b.x, b.x + b.w]);
+      const ys = allBounds.flatMap((b) => [b.y, b.y + b.h]);
+      const minX = Math.min(...xs, 0);
+      const minY = Math.min(...ys, 0);
+      const maxX = Math.max(...xs, 6);
+      const maxY = Math.max(...ys, 4);
+
+      const width = Math.max(700, Math.round((maxX - minX) * scale + margin * 2));
+      const height = Math.max(460, Math.round((maxY - minY) * scale + margin * 2));
+
+      state.lastDiagramMetrics = { width, height };
+      state.diagramTransform = { scale, margin, minX, minY };
+      elements.diagramEmpty.classList.add('hidden');
+      elements.diagramMeta.textContent = `${objectShapes.length} objects • ${factShapes.length} facts`;
+
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      elements.diagramStage.style.width = `${width}px`;
+      elements.diagramStage.style.height = `${height}px`;
+
+      const bg = createSvgElement('rect');
+      bg.setAttribute('x', '0');
+      bg.setAttribute('y', '0');
+      bg.setAttribute('width', String(width));
+      bg.setAttribute('height', String(height));
+      bg.setAttribute('fill', '#ffffff');
+      bg.setAttribute('data-canvas-bg', 'true');
+      bg.addEventListener('mousedown', (event) => {
+        state.selectedConstraintId = null;
+        renderConstraintEditorState();
+        if (state.editorMode === 'select' && event.button === 0) {
+          if (event.shiftKey) {
+            startMarqueeSelection(event);
+          } else {
+            startViewportPan(event);
+          }
+        }
+      });
+      svg.appendChild(bg);
+
+      const objectShapeBySubject = new Map(objectShapes.map((shape) => [shape.subjectRef, shape]));
+      const readingShapeBySubject = new Map(readingShapes.map((shape) => [shape.subjectRef, shape]));
+      const objectRectBySubject = new Map();
+      const roleAnchorByRef = new Map();
+
+      const connectionLayer = createSvgElement('g');
+      const uniquenessLayer = createSvgElement('g');
+      const externalConstraintLayer = createSvgElement('g');
+      const roleLayer = createSvgElement('g');
+      const objectLayer = createSvgElement('g');
+      const mandatoryLayer = createSvgElement('g');
+      const readingLayer = createSvgElement('g');
+
+      for (const objectShape of objectShapes) {
+        const object = model.objectById.get(objectShape.subjectRef);
+        if (!object) continue;
+
+        const rect = normalizedObjectRect(objectShape.bounds, object, minX, minY, scale, margin);
+        objectRectBySubject.set(objectShape.subjectRef, rect);
+        const group = createSvgElement('g');
+        group.setAttribute('data-search', searchableObjectText(object).toLowerCase());
+        group.setAttribute('data-kind', 'object');
+        group.setAttribute('data-element-kind', 'object');
+        group.setAttribute('data-element-id', object.id);
+        group.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer';
+        group.addEventListener('mousedown', (event) => {
+          if (state.editorMode === 'pan') {
+            startViewportPan(event);
+            return;
+          }
+          if (state.editorMode === 'select') startShapeDrag('objectShape', objectShape.subjectRef, event);
+        });
+        group.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          if (handleObjectPickForFact(object.id)) return;
+          selectElement('object', object.id);
+        });
+        group.addEventListener('dblclick', (event) => {
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('object', object.id);
+          quickEditObject(object.id);
+        });
+
+        const box = createSvgElement('rect');
+        box.setAttribute('x', String(rect.x));
+        box.setAttribute('y', String(rect.y));
+        box.setAttribute('width', String(rect.w));
+        box.setAttribute('height', String(rect.h));
+        box.setAttribute('rx', object.type === 'ValueType' ? '3' : '12');
+        box.setAttribute('ry', object.type === 'ValueType' ? '3' : '12');
+        box.setAttribute('fill', objectFill(object.type));
+        box.setAttribute('stroke', '#333333');
+        box.setAttribute('stroke-width', '1.5');
+        if (object.type === 'ValueType') {
+          box.setAttribute('stroke-dasharray', '5 3');
+        }
+        group.appendChild(box);
+
+        const refModesText = diagramRefModesText(object);
+        const title = createSvgElement('text');
+        title.setAttribute('x', String(rect.x + rect.w / 2));
+        title.setAttribute('y', String(rect.y + (refModesText ? 16 : rect.h / 2)));
+        title.setAttribute('text-anchor', 'middle');
+        title.setAttribute('dominant-baseline', refModesText ? 'auto' : 'middle');
+        title.setAttribute('font-size', object.type === 'ValueType' ? '13' : '14');
+        title.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+        title.setAttribute('font-weight', '700');
+        title.setAttribute('fill', '#0b4f94');
+        title.textContent = object.name;
+        group.appendChild(title);
+
+        if (refModesText) {
+          const subtitle = createSvgElement('text');
+          subtitle.setAttribute('x', String(rect.x + rect.w / 2));
+          subtitle.setAttribute('y', String(rect.y + rect.h - 8));
+          subtitle.setAttribute('text-anchor', 'middle');
+          subtitle.setAttribute('font-size', '11');
+          subtitle.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+          subtitle.setAttribute('fill', '#0b4f94');
+          subtitle.textContent = `(.${refModesText})`;
+          group.appendChild(subtitle);
+        }
+
+        objectLayer.appendChild(group);
+      }
+
+      for (const factShape of factShapes) {
+        const fact = model.factsById.get(factShape.subjectRef);
+        if (!fact) continue;
+
+        const roleOrder = fact.roles.length ? fact.roles : [{ mandatory: false, playerRef: null, playerName: 'Role' }];
+        const roleBoxes = layoutRoleBoxes(factShape.bounds, roleOrder.length || 1, minX, minY, scale, margin);
+        const preparedUniquenessConstraints = prepareFactUniquenessConstraints(fact, roleOrder);
+        const factSearchText = searchableFactText(fact).toLowerCase();
+        const factGroup = createSvgElement('g');
+        factGroup.setAttribute('data-search', factSearchText);
+        factGroup.setAttribute('data-kind', 'fact');
+        factGroup.setAttribute('data-element-kind', 'fact');
+        factGroup.setAttribute('data-element-id', fact.id);
+        factGroup.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer';
+        factGroup.addEventListener('mousedown', (event) => {
+          if ((event.target || {}).hasAttribute && event.target.hasAttribute('data-role-ref')) return;
+          if (state.editorMode === 'pan') {
+            startViewportPan(event);
+            return;
+          }
+          if (state.editorMode === 'select') startShapeDrag('factShape', factShape.subjectRef, event);
+        });
+        factGroup.addEventListener('click', (event) => {
+          if ((event.target || {}).hasAttribute && event.target.hasAttribute('data-role-ref')) return;
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('fact', fact.id);
+        });
+        factGroup.addEventListener('dblclick', (event) => {
+          if ((event.target || {}).hasAttribute && event.target.hasAttribute('data-role-ref')) return;
+          event.stopPropagation();
+          if (state.editorMode === 'pan') return;
+          selectElement('fact', fact.id);
+          quickEditFact(fact.id);
+        });
+
+        for (const uniquenessConstraint of preparedUniquenessConstraints) {
+          drawUniquenessConstraint(uniquenessLayer, uniquenessConstraint, roleBoxes, factSearchText);
+        }
+
+        roleBoxes.forEach((boxRect, index) => {
+          const role = roleOrder[index] || roleOrder[roleOrder.length - 1];
+          const primaryRoleRef = role?.id || role?.actualRoleId || '';
+          const roleBox = createSvgElement('rect');
+          roleBox.setAttribute('x', String(boxRect.x));
+          roleBox.setAttribute('y', String(boxRect.y));
+          roleBox.setAttribute('width', String(boxRect.w));
+          roleBox.setAttribute('height', String(boxRect.h));
+          roleBox.setAttribute('fill', '#ffffff');
+          roleBox.setAttribute('stroke', '#1f1f1f');
+          roleBox.setAttribute('stroke-width', '1.4');
+          if (primaryRoleRef) roleBox.setAttribute('data-role-ref', primaryRoleRef);
+          roleBox.style.cursor = state.editorMode === 'pan' ? 'grab' : 'pointer';
+          roleBox.addEventListener('mousedown', (event) => {
+            if (state.editorMode === 'pan') {
+              event.stopPropagation();
+              startViewportPan(event);
+            }
+          });
+          roleBox.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (state.editorMode === 'pan') return;
+            if (primaryRoleRef) toggleRoleSelection(primaryRoleRef);
+          });
+          roleBox.addEventListener('dblclick', (event) => {
+            event.stopPropagation();
+            if (state.editorMode === 'pan') return;
+            if (primaryRoleRef) quickEditRole(primaryRoleRef);
+          });
+          factGroup.appendChild(roleBox);
+
+          if (role?.name) {
+            drawRoleName(factGroup, role.name, boxRect, index === 0 ? 'left' : index === roleBoxes.length - 1 ? 'right' : 'bottom');
+          }
+
+          const fallbackAnchor = buildStandaloneRoleAnchor(boxRect);
+          if (role?.id) roleAnchorByRef.set(role.id, fallbackAnchor);
+          if (role?.actualRoleId) roleAnchorByRef.set(role.actualRoleId, fallbackAnchor);
+
+          if (role && role.playerRef) {
+            const objectShape = objectShapeBySubject.get(role.playerRef);
+            if (objectShape) {
+              const objectRect = objectRectBySubject.get(role.playerRef) || normalizedObjectRect(objectShape.bounds, model.objectById.get(role.playerRef), minX, minY, scale, margin);
+              const linePoints = connectObjectToRole(objectRect, boxRect);
+
+              const line = createSvgElement('line');
+              line.setAttribute('x1', String(linePoints.x1));
+              line.setAttribute('y1', String(linePoints.y1));
+              line.setAttribute('x2', String(linePoints.x2));
+              line.setAttribute('y2', String(linePoints.y2));
+              line.setAttribute('stroke', '#303030');
+              line.setAttribute('stroke-width', '1.2');
+              connectionLayer.appendChild(line);
+
+              const roleAnchor = buildRoleAnchor(boxRect, linePoints, objectRect);
+              role.renderFocusPoint = { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h / 2 };
+              if (role.id) roleAnchorByRef.set(role.id, roleAnchor);
+              if (role.actualRoleId) roleAnchorByRef.set(role.actualRoleId, roleAnchor);
+
+              if (role.mandatory) {
+                const mandatoryDot = positionMandatoryDot(roleAnchor, 4.4);
+                const dot = createSvgElement('circle');
+                dot.setAttribute('cx', String(mandatoryDot.x));
+                dot.setAttribute('cy', String(mandatoryDot.y));
+                dot.setAttribute('r', '4.4');
+                dot.setAttribute('fill', '#111111');
+                dot.setAttribute('stroke', '#ffffff');
+                dot.setAttribute('stroke-width', '1');
+                dot.setAttribute('data-constraint-tags', 'mandatory');
+                mandatoryLayer.appendChild(dot);
+              }
+            }
+          }
+        });
+
+        roleLayer.appendChild(factGroup);
+      }
+
+      renderExternalConstraints(externalConstraintLayer, model.externalConstraints || [], roleAnchorByRef);
+
+      svg.append(connectionLayer, uniquenessLayer, roleLayer, objectLayer, mandatoryLayer, externalConstraintLayer, readingLayer);
+      applyDiagramZoom();
+    }
+
+    function renderError(message) {
+      elements.summary.innerHTML = `
+        <div class="summary-line">
+          <span class="summary-label">Ошибка:</span>
+          <span class="summary-badge error">${escapeHtml(message)}</span>
+        </div>
+      `;
+      elements.diagramMeta.textContent = 'Ошибка';
+      elements.sourcePreview.textContent = 'Не удалось показать XML из-за ошибки разбора.';
+      elements.diagramEmpty.classList.remove('hidden');
+    }
+
+    function applyDiagramZoom() {
+      if (!state.lastDiagramMetrics) return;
+      const width = Math.round(state.lastDiagramMetrics.width * state.zoom);
+      const height = Math.round(state.lastDiagramMetrics.height * state.zoom);
+      elements.diagramSvg.setAttribute('width', String(width));
+      elements.diagramSvg.setAttribute('height', String(height));
+      elements.diagramStage.style.width = `${Math.max(width, elements.diagramViewport.clientWidth - 20)}px`;
+      elements.diagramStage.style.height = `${Math.max(height, elements.diagramViewport.clientHeight - 20)}px`;
+      syncZoomSelect();
+    }
+
+    function syncZoomSelect() {
+      const value = String(Number(state.zoom.toFixed(2)));
+      const existing = Array.from(elements.zoomSelect.options).find((option) => option.value === value);
+      if (existing) {
+        elements.zoomSelect.value = value;
+        return;
+      }
+      let custom = elements.zoomSelect.querySelector('option[data-custom-zoom="true"]');
+      if (!custom) {
+        custom = document.createElement('option');
+        custom.setAttribute('data-custom-zoom', 'true');
+        elements.zoomSelect.appendChild(custom);
+      }
+      custom.value = value;
+      custom.textContent = `${Math.round(state.zoom * 100)}%`;
+      elements.zoomSelect.value = value;
+    }
+
+    function applySearchState() {
+      const query = state.search;
+
+      const svgNodes = elements.diagramSvg.querySelectorAll('[data-search]');
+      svgNodes.forEach((node) => {
+        const text = (node.getAttribute('data-search') || '').toLowerCase();
+        const tags = String(node.getAttribute('data-constraint-tags') || '').split(/\s+/).filter(Boolean);
+        const filterMatched = !tags.length || passesConstraintFilter(tags);
+        const matched = filterMatched && (!query || text.includes(query));
+        node.style.opacity = matched ? '1' : '0.22';
+        node.style.display = filterMatched ? '' : 'none';
+
+        const rects = node.querySelectorAll('rect');
+        rects.forEach((rect) => {
+          if (matched && query) {
+            rect.setAttribute('stroke-width', '2.2');
+            rect.setAttribute('stroke', '#b88400');
+            if (node.getAttribute('data-kind') === 'fact') rect.setAttribute('fill', '#fff7c2');
+          } else {
+            rect.setAttribute('stroke-width', node.getAttribute('data-kind') === 'fact' ? '1.4' : '1.5');
+            rect.setAttribute('stroke', '#333333');
+            if (node.getAttribute('data-kind') === 'fact') rect.setAttribute('fill', '#ffffff');
+          }
+        });
+      });
+
+      document.querySelectorAll('.fact-card').forEach((card) => {
+        const text = (card.getAttribute('data-search') || '').toLowerCase();
+        const matched = !query || text.includes(query);
+        card.classList.toggle('is-dimmed', !matched);
+      });
+
+      elements.diagramSvg.querySelectorAll('[data-constraint-tags]').forEach((node) => {
+        const tags = String(node.getAttribute('data-constraint-tags') || '').split(/\s+/).filter(Boolean);
+        const filterMatched = passesConstraintFilter(tags);
+        node.style.display = filterMatched ? '' : 'none';
+      });
+
+      applyRoleSelectionState();
+    }
+
+    function setEditorMode(mode) {
+      state.editorMode = mode;
+      state.pendingFactObjectRefs = [];
+      updateModeButtons();
+      if (mode === 'select') {
+        setStatus('Режим выбора.');
+      } else if (mode === 'pan') {
+        setStatus('Режим «рука»: перетаскивайте схему мышью.');
+      } else if (mode === 'addUnaryFact') {
+        setStatus('Выберите один объект на диаграмме для создания унарного факта.');
+      } else if (mode === 'addBinaryFact') {
+        setStatus('Выберите два объекта на диаграмме для создания бинарного факта.');
+      } else if (mode === 'addTernaryFact') {
+        setStatus('Выберите три объекта на диаграмме для создания тернарного факта.');
+      } else {
+        setStatus('Щёлкните по диаграмме, чтобы добавить новый объект.');
+      }
+    }
+
+    function updateModeButtons() {
+      const mapping = {
+        select: elements.selectModeBtn,
+        pan: elements.panModeBtn,
+        addEntity: elements.addEntityBtn,
+        addValue: elements.addValueBtn,
+        addUnaryFact: elements.addUnaryFactBtn,
+        addBinaryFact: elements.addFactBtn,
+        addTernaryFact: elements.addTernaryFactBtn
+      };
+      Object.entries(mapping).forEach(([mode, button]) => {
+        if (!button) return;
+        button.classList.toggle('mode-active', state.editorMode === mode);
+      });
+      elements.diagramViewport.classList.toggle('pan-mode', state.editorMode === 'pan');
+    }
+
+    function pushHistorySnapshot() {
+      if (!state.model) return;
+      state.history.push(captureModelSnapshot(state.model));
+      if (state.history.length > 100) state.history.shift();
+      state.future = [];
+    }
+
+    function captureModelSnapshot(model) {
+      return structuredClone({
+        name: model.name,
+        fileName: model.fileName,
+        sourceText: model.sourceText,
+        objects: model.objects,
+        facts: model.facts,
+        externalConstraints: model.externalConstraints || [],
+        diagram: model.diagram,
+        constraintsCount: model.constraintsCount
+      });
+    }
+
+    function applyModelSnapshot(snapshot) {
+      if (!state.model || !snapshot) return;
+      state.model.name = snapshot.name;
+      state.model.fileName = snapshot.fileName;
+      state.model.sourceText = snapshot.sourceText;
+      state.model.objects = structuredClone(snapshot.objects);
+      state.model.facts = structuredClone(snapshot.facts);
+      state.model.externalConstraints = structuredClone(snapshot.externalConstraints || []);
+      state.model.diagram = structuredClone(snapshot.diagram);
+      state.model.constraintsCount = snapshot.constraintsCount;
+      rebuildModelCaches(state.model);
+      renderModel(state.model);
+    }
+
+    function rebuildModelCaches(model) {
+      model.objectById = new Map();
+      model.objects.forEach((object) => model.objectById.set(object.id, object));
+      model.factsById = new Map();
+      model.roleMeta = new Map();
+      model.readingOrderById = new Map();
+      model.facts.forEach((fact) => {
+        model.factsById.set(fact.id, fact);
+        (fact.roles || []).forEach((role, index) => {
+          role.factId = fact.id;
+          role.factRoleIndex = index;
+          role.IsMandatory = !!role.IsMandatory || !!role.mandatory;
+          role.mandatory = !!role.IsMandatory;
+          role.Multiplicity = role.Multiplicity || role.multiplicity || 'Unspecified';
+          role.multiplicity = role.Multiplicity;
+          if (role.id) model.roleMeta.set(role.id, role);
+          if (role.actualRoleId) model.roleMeta.set(role.actualRoleId, role);
+        });
+        (fact.readings || []).forEach((readingOrder) => {
+          model.readingOrderById.set(readingOrder.id, readingOrder);
+        });
+      });
+      syncGeneratedCounterFromModel(model);
+    }
+
+    function syncGeneratedCounterFromModel(model) {
+      const allIds = [];
+      (model.objects || []).forEach((object) => allIds.push(object.id));
+      (model.facts || []).forEach((fact) => {
+        allIds.push(fact.id);
+        (fact.roles || []).forEach((role) => {
+          allIds.push(role.id, role.actualRoleId);
+        });
+        (fact.readings || []).forEach((readingOrder) => {
+          allIds.push(readingOrder.id);
+          (readingOrder.readings || []).forEach((reading) => allIds.push(reading.id));
+        });
+      });
+      (model.externalConstraints || []).forEach((constraint) => allIds.push(constraint.id));
+      [...(model.diagram?.objectShapes || []), ...(model.diagram?.factShapes || []), ...(model.diagram?.readingShapes || [])]
+        .forEach((shape) => allIds.push(shape.id));
+      let maxCounter = 0;
+      allIds.filter(Boolean).forEach((id) => {
+        const match = String(id).match(/_(\d+)$/);
+        if (match) maxCounter = Math.max(maxCounter, Number(match[1]));
+      });
+      state.generatedConstraintCounter = Math.max(state.generatedConstraintCounter, maxCounter);
+    }
+
+    function undoEdit() {
+      if (!state.history.length || !state.model) {
+        setStatus('История undo пуста.', true);
+        return;
+      }
+      state.future.push(captureModelSnapshot(state.model));
+      const snapshot = state.history.pop();
+      state.selectedConstraintId = null;
+      state.selectedElement = null;
+      state.multiSelectedElements = [];
+      state.pendingFactObjectRefs = [];
+      applyModelSnapshot(snapshot);
+      setStatus('Undo выполнен.');
+    }
+
+    function redoEdit() {
+      if (!state.future.length || !state.model) {
+        setStatus('История redo пуста.', true);
+        return;
+      }
+      state.history.push(captureModelSnapshot(state.model));
+      const snapshot = state.future.pop();
+      state.selectedConstraintId = null;
+      state.selectedElement = null;
+      state.multiSelectedElements = [];
+      state.pendingFactObjectRefs = [];
+      applyModelSnapshot(snapshot);
+      setStatus('Redo выполнен.');
+    }
+
+    function selectElement(kind, id, options = {}) {
+      if (!options.keepBusinessRuleFocus) clearBusinessRuleFocus();
+      state.selectedElement = { kind, id };
+      state.selectedConstraintId = null;
+      state.multiSelectedElements = [];
+      renderPropertiesPanel();
+      applySearchState();
+    }
+
+    function getSelectedElementData() {
+      if (!state.selectedElement || !state.model) return null;
+      if (state.selectedElement.kind === 'object') {
+        return state.model.objects.find((item) => item.id === state.selectedElement.id) || null;
+      }
+      if (state.selectedElement.kind === 'fact') {
+        return state.model.facts.find((item) => item.id === state.selectedElement.id) || null;
+      }
+      return null;
+    }
+
+    function renderPropertiesPanel() {
+      const selectedConstraintEntry = getSelectedConstraintEntry();
+      if (selectedConstraintEntry) {
+        renderConstraintPropertiesPanel(selectedConstraintEntry);
+        return;
+      }
+
+      const selected = getSelectedElementData();
+      if (!selected) {
+        if (state.multiSelectedElements?.length) {
+          elements.propertiesContent.innerHTML = `Выбрано элементов: <strong>${state.multiSelectedElements.length}</strong>.`; 
+        } else {
+          elements.propertiesContent.innerHTML = 'Элемент не выбран.';
+        }
+        return;
+      }
+
+      if (state.selectedElement.kind === 'object') {
+        const refModesValue = objectRefModesText(selected) || '';
+        const isValueType = selected.type === 'ValueType';
+        elements.propertiesContent.innerHTML = `
+          <div class="property-row"><label>Тип</label><select id="propObjectType"><option value="EntityType">EntityType</option><option value="ValueType">ValueType</option></select></div>
+          <div class="property-row"><label>Имя</label><input id="propObjectName" type="text" value="${escapeHtml(selected.name || '')}" /></div>
+          ${isValueType ? '' : `<div class="property-row"><label>Ключ</label><input id="propObjectRefMode" type="text" value="${escapeHtml(refModesValue)}" placeholder="через запятую" /></div>`}
+          <div class="property-row"><label>Тип данных</label><select id="propObjectDataType">
+            <option value="FixedLengthTextDataType">Текст</option>
+            <option value="SignedIntegerNumericDataType">Целое число</option>
+            <option value="AutoCounterNumericDataType">Счётчик</option>
+            <option value="UnspecifiedDataType">Не указан</option>
+          </select></div>
+          ${isValueType ? '' : `<div class="property-row"><label>Независимая</label><label><input id="propObjectIndependent" type="checkbox" ${selected.independent ? 'checked' : ''} /> yes</label></div>`}
+          <div class="property-row"><button id="applyObjectPropsBtn" type="button">Применить</button><button id="deleteObjectBtn" type="button">Удалить объект</button></div>
+        `;
+        document.getElementById('propObjectType').value = selected.type;
+        document.getElementById('propObjectDataType').value = selected.dataType || 'FixedLengthTextDataType';
+        document.getElementById('applyObjectPropsBtn').addEventListener('click', applyObjectProperties);
+        document.getElementById('deleteObjectBtn').addEventListener('click', deleteSelectedObject);
+        applyRussianTooltips(elements.propertiesPanel);
+        return;
+      }
+
+      const firstReading = selected.readings?.[0]?.readings?.[0] || { template: '' };
+      const rolesMarkup = (selected.roles || []).map((role, index) => {
+        const roleRef = role.id || role.actualRoleId || '';
+        const isUnique = hasSingleRoleUniqueness(selected, roleRef);
+        return `
+        <div class="role-edit-block">
+          <div class="property-row"><label>Роль ${index + 1}</label><input data-role-index="${index}" class="propRoleName" type="text" value="${escapeHtml(role.name || '')}" /></div>
+          <div class="property-row"><label>Флаги</label><label style="display:inline-flex;align-items:center;gap:4px;"><input data-role-index="${index}" data-role-ref="${escapeHtml(roleRef)}" class="propRoleMandatory" type="checkbox" ${role.IsMandatory || role.mandatory ? 'checked' : ''} /> Обязательность</label><label style="display:inline-flex;align-items:center;gap:4px;"><input data-role-index="${index}" data-role-ref="${escapeHtml(roleRef)}" class="propRoleUnique" type="checkbox" ${isUnique ? 'checked' : ''} /> Уникальность</label></div>
+          <div class="property-row"><label>Кардинальность</label><select data-role-index="${index}" data-role-ref="${escapeHtml(roleRef)}" class="propRoleMultiplicity">
+            <option value="Unspecified">Не указана</option>
+            <option value="ExactlyOne">РовноОдин</option>
+            <option value="ZeroToOne">НольИлиОдин</option>
+            <option value="ZeroToMany">НольИлиМного</option>
+            <option value="OneToMany">ОдинИлиМного</option>
+          </select></div>
+        </div>
+      `;
+      }).join('');
+
+      const uniquenessMarkup = (selected.uniquenessConstraints || []).map((constraint, index) => {
+        const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+          const role = selected.roles.find((item) => item.id === roleRef || item.actualRoleId === roleRef);
+          return role?.name || role?.playerName || roleRef;
+        }).join(' + ');
+        const preferredTarget = constraint.preferredForRef ? (state.model.objectById.get(constraint.preferredForRef)?.name || constraint.preferredForRef) : '—';
+        return `
+          <div class="role-edit-block">
+            <div class="property-row"><label>UC ${index + 1}</label><span>${escapeHtml(roleLabels || constraint.name || constraint.id)}</span></div>
+            <div class="property-row"><label>Preferred</label><span>${constraint.preferred ? 'true' : 'false'}</span></div>
+            <div class="property-row"><label>Target</label><span>${escapeHtml(preferredTarget)}</span></div>
+            <div class="property-row"><button type="button" class="selectFactUcBtn" data-constraint-id="${escapeHtml(constraint.id)}">Редактировать</button><button type="button" class="deleteFactUcBtn" data-constraint-id="${escapeHtml(constraint.id)}">Удалить uniqueness</button></div>
+          </div>
+        `;
+      }).join('');
+
+      elements.propertiesContent.innerHTML = `
+        <div class="property-row"><label>Имя факта</label><input id="propFactName" type="text" value="${escapeHtml(selected.name || '')}" /></div>
+        <div class="property-row"><label>Reading</label><textarea id="propFactReading">${escapeHtml(firstReading.template || '')}</textarea></div>
+        ${rolesMarkup || '<div class="property-row">У факта нет ролей.</div>'}
+        <div class="role-edit-block">
+          <div class="property-row"><label>Uniqueness</label><span>${selected.uniquenessConstraints?.length || 0}</span></div>
+          <div class="property-row"><button id="addFactUcFromSelectionBtn" type="button">Добавить uniqueness по выбранным ролям</button><button id="addPreferredFactUcFromSelectionBtn" type="button">Добавить preferred uniqueness</button></div>
+          ${uniquenessMarkup || '<div class="property-row">Uniqueness constraints отсутствуют.</div>'}
+        </div>
+        <div class="property-row"><button id="applyFactPropsBtn" type="button">Применить</button><button id="deleteFactBtn" type="button">Удалить факт</button></div>
+      `;
+      document.querySelectorAll('.propRoleMultiplicity').forEach((select) => {
+        const index = Number(select.getAttribute('data-role-index'));
+        select.value = selected.roles?.[index]?.Multiplicity || selected.roles?.[index]?.multiplicity || 'Unspecified';
+        select.addEventListener('change', () => setRoleMultiplicity(select.getAttribute('data-role-ref'), select.value));
+      });
+      document.querySelectorAll('.propRoleMandatory').forEach((input) => {
+        input.addEventListener('change', () => setRoleMandatory(input.getAttribute('data-role-ref'), input.checked));
+      });
+      document.querySelectorAll('.propRoleUnique').forEach((input) => {
+        input.addEventListener('change', () => setRoleUniqueness(input.getAttribute('data-role-ref'), input.checked));
+      });
+      document.querySelectorAll('.selectFactUcBtn').forEach((button) => {
+        button.addEventListener('click', () => selectConstraint(button.getAttribute('data-constraint-id')));
+      });
+      document.querySelectorAll('.deleteFactUcBtn').forEach((button) => {
+        button.addEventListener('click', () => deleteFactUniqueness(button.getAttribute('data-constraint-id')));
+      });
+      document.getElementById('addFactUcFromSelectionBtn').addEventListener('click', addFactUniquenessFromSelection);
+      document.getElementById('addPreferredFactUcFromSelectionBtn').addEventListener('click', addPreferredFactUniquenessFromSelection);
+      document.getElementById('applyFactPropsBtn').addEventListener('click', applyFactProperties);
+      document.getElementById('deleteFactBtn').addEventListener('click', deleteSelectedFact);
+      applyRussianTooltips(elements.propertiesPanel);
+    }
+
+    function renderConstraintPropertiesPanel(entry) {
+      const { constraint, source, fact } = entry;
+      const isUniqueness = constraint.type === 'UniquenessConstraint' || constraint.renderKind === 'ExternalUniqueness';
+      const targetCandidates = source === 'internal' && fact
+        ? getPreferredTargetCandidates(fact)
+        : isUniqueness
+          ? [...new Set((constraint.roleRefs || []).map((roleRef) => state.model.roleMeta.get(roleRef)?.playerRef).filter(Boolean))]
+              .map((objectRef) => ({ ref: objectRef, label: state.model.objectById.get(objectRef)?.name || objectRef }))
+          : [];
+      const targetOptions = targetCandidates
+        .map((candidate) => `<option value="${escapeHtml(candidate.ref)}">${escapeHtml(candidate.label)}</option>`)
+        .join('');
+      const roleLabels = (constraint.roleRefs || []).map((roleRef) => {
+        const role = state.model.roleMeta.get(roleRef);
+        return role?.name || role?.playerName || roleRef;
+      }).join(' + ');
+
+      elements.propertiesContent.innerHTML = `
+        <div class="property-row"><label>Constraint</label><input id="propConstraintName" type="text" value="${escapeHtml(constraint.name || '')}" /></div>
+        <div class="property-row"><label>Тип</label><input type="text" value="${escapeHtml(source === 'internal' ? 'Internal uniqueness' : (constraint.renderKind || constraint.type))}" readonly /></div>
+        <div class="property-row"><label>Роли</label><textarea readonly>${escapeHtml(roleLabels)}</textarea></div>
+        ${isUniqueness ? `<div class="property-row"><label>Preferred</label><label><input id="propConstraintPreferred" type="checkbox" ${constraint.preferred ? 'checked' : ''} /> true</label></div>` : ''}
+        ${isUniqueness ? `<div class="property-row"><label>PreferredFor</label><select id="propConstraintPreferredFor"><option value="">—</option>${targetOptions}</select></div>` : ''}
+        ${constraint.renderKind === 'FrequencyConstraint' ? `<div class="property-row"><label>Min/Max</label><input id="propConstraintMin" type="text" value="${escapeHtml(constraint.minFrequency || '')}" /><input id="propConstraintMax" type="text" value="${escapeHtml(constraint.maxFrequency || '')}" /></div>` : ''}
+        <div class="property-row"><button id="applySelectedConstraintPropsBtn" type="button">Применить</button><button id="deleteSelectedConstraintPropsBtn" type="button">Удалить</button></div>
+      `;
+
+      if (isUniqueness && document.getElementById('propConstraintPreferredFor')) {
+        document.getElementById('propConstraintPreferredFor').value = constraint.preferredForRef || '';
+      }
+      document.getElementById('applySelectedConstraintPropsBtn').addEventListener('click', applySelectedConstraintEdits);
+      document.getElementById('deleteSelectedConstraintPropsBtn').addEventListener('click', deleteSelectedConstraint);
+    }
+
+    function applyObjectProperties() {
+      const object = getSelectedElementData();
+      if (!object) return;
+      pushHistorySnapshot();
+      object.type = document.getElementById('propObjectType').value;
+      object.name = document.getElementById('propObjectName').value.trim() || object.name;
+      const refModeInput = document.getElementById('propObjectRefMode');
+      object.refModes = refModeInput ? parseRefModesInput(refModeInput.value) : [];
+      object.refMode = object.refModes[0] || '';
+      object.dataType = document.getElementById('propObjectDataType').value || 'FixedLengthTextDataType';
+      const independentInput = document.getElementById('propObjectIndependent');
+      object.independent = independentInput ? independentInput.checked : false;
+      if (object.type === 'ValueType') {
+        object.refModes = [];
+        object.refMode = '';
+        object.independent = false;
+      }
+      state.model.facts.forEach((fact) => {
+        (fact.roles || []).forEach((role) => {
+          if (role.playerRef === object.id) role.playerName = object.name;
+        });
+        (fact.readings || []).forEach((readingOrder) => {
+          (readingOrder.readings || []).forEach((reading) => {
+            if (Array.isArray(reading.roleNames)) {
+              reading.roleNames = (readingOrder.roleSequence || []).map((roleRef) => {
+                const role = fact.roles.find((item) => item.id === roleRef || item.actualRoleId === roleRef);
+                return role?.playerName || role?.name || roleRef;
+              });
+              reading.verbalized = verbalize(reading.template, reading.roleNames);
+            }
+          });
+        });
+      });
+      renderModel(state.model);
+      setStatus('Свойства объекта обновлены.');
+    }
+
+    function applyFactProperties() {
+      const fact = getSelectedElementData();
+      if (!fact) return;
+      pushHistorySnapshot();
+      fact.name = document.getElementById('propFactName').value.trim() || fact.name;
+      const readingText = document.getElementById('propFactReading').value.trim();
+      document.querySelectorAll('.propRoleName').forEach((input) => {
+        const index = Number(input.getAttribute('data-role-index'));
+        if (fact.roles[index]) fact.roles[index].name = input.value.trim();
+      });
+      if (fact.readings?.[0]?.readings?.[0]) {
+        const roleNames = (fact.readings[0].roleSequence || []).map((roleRef) => {
+          const role = fact.roles.find((item) => item.id === roleRef || item.actualRoleId === roleRef);
+          return role?.playerName || role?.name || roleRef;
+        });
+        fact.readings[0].readings[0].template = readingText;
+        fact.readings[0].readings[0].roleNames = roleNames;
+        fact.readings[0].readings[0].verbalized = verbalize(readingText, roleNames);
+      }
+      renderModel(state.model);
+      setStatus('Свойства факта обновлены.');
+    }
+
+    function deleteSelectedObject() {
+      const object = getSelectedElementData();
+      if (!object) return;
+      pushHistorySnapshot();
+      const objectId = object.id;
+      state.model.objects = state.model.objects.filter((item) => item.id !== objectId);
+      state.model.diagram.objectShapes = (state.model.diagram.objectShapes || []).filter((shape) => shape.subjectRef !== objectId);
+      const factIdsToRemove = state.model.facts.filter((fact) => (fact.roles || []).some((role) => role.playerRef === objectId)).map((fact) => fact.id);
+      state.model.facts = state.model.facts.filter((fact) => !factIdsToRemove.includes(fact.id));
+      state.model.diagram.factShapes = (state.model.diagram.factShapes || []).filter((shape) => !factIdsToRemove.includes(shape.subjectRef));
+      state.model.diagram.readingShapes = (state.model.diagram.readingShapes || []).filter((shape) => !factIdsToRemove.includes(shape.factId));
+      state.model.externalConstraints = (state.model.externalConstraints || []).filter((constraint) => !(constraint.roleRefs || []).some((roleRef) => {
+        const role = state.model.roleMeta?.get(roleRef);
+        return role?.playerRef === objectId || factIdsToRemove.includes(role?.factId);
+      }));
+      state.selectedElement = null;
+      rebuildModelCaches(state.model);
+      renderModel(state.model);
+      setStatus('Объект и связанные факты удалены.');
+    }
+
+    function deleteSelectedFact() {
+      const fact = getSelectedElementData();
+      if (!fact) return;
+      pushHistorySnapshot();
+      const factId = fact.id;
+      const roleIds = (fact.roles || []).flatMap((role) => [role.id, role.actualRoleId].filter(Boolean));
+      state.model.facts = state.model.facts.filter((item) => item.id !== factId);
+      state.model.diagram.factShapes = (state.model.diagram.factShapes || []).filter((shape) => shape.subjectRef !== factId);
+      state.model.diagram.readingShapes = (state.model.diagram.readingShapes || []).filter((shape) => shape.factId !== factId && !fact.readings.some((ro) => ro.id === shape.subjectRef));
+      state.model.externalConstraints = (state.model.externalConstraints || []).filter((constraint) => !(constraint.roleRefs || []).some((roleRef) => roleIds.includes(roleRef)));
+      state.selectedElement = null;
+      rebuildModelCaches(state.model);
+      renderModel(state.model);
+      setStatus('Факт удалён.');
+    }
+
+    function handleDiagramCanvasClick(event) {
+      if (state.suppressNextCanvasClick) {
+        state.suppressNextCanvasClick = false;
+        return;
+      }
+      if (!state.model || !state.diagramTransform) return;
+      if (event.target && event.target.getAttribute && event.target.getAttribute('data-role-ref')) return;
+      if (state.editorMode === 'select' || state.editorMode === 'pan') {
+        if (state.editorMode === 'select') {
+          clearBusinessRuleFocus();
+          state.selectedElement = null;
+          state.selectedConstraintId = null;
+          renderPropertiesPanel();
+          renderConstraintEditorState();
+          applySearchState();
+        }
+        return;
+      }
+
+      const isCanvasBackground = event.target === elements.diagramSvg || (event.target.getAttribute && event.target.getAttribute('data-canvas-bg') === 'true');
+      if (!isCanvasBackground && !['addUnaryFact', 'addBinaryFact', 'addTernaryFact'].includes(state.editorMode)) return;
+
+      const point = clientToModelPoint(event);
+      if (!point) return;
+
+      if (state.editorMode === 'addEntity' || state.editorMode === 'addValue') {
+        pushHistorySnapshot();
+        const objectType = state.editorMode === 'addEntity' ? 'EntityType' : 'ValueType';
+        const objectId = generateConstraintId(objectType.toLowerCase());
+        const baseName = state.editorMode === 'addEntity' ? 'НоваяСущность' : state.editorMode === 'addValue' ? 'НовоеЗначение' : 'НовыйОбъектФакта';
+        const defaultRefModes = objectType === 'ValueType' ? [] : ['code'];
+        const object = {
+          id: objectId,
+          type: objectType,
+          name: `${baseName}${state.model.objects.length + 1}`,
+          refModes: defaultRefModes,
+          refMode: defaultRefModes[0] || '',
+          dataType: 'FixedLengthTextDataType',
+          independent: false,
+          notes: [],
+          userCreated: true
+        };
+        state.model.objects.push(object);
+        state.model.diagram.objectShapes.push({
+          id: `shape_${objectId}`,
+          subjectRef: objectId,
+          bounds: { x: point.x, y: point.y, w: 1.5, h: 0.52 }
+        });
+        rebuildModelCaches(state.model);
+        state.selectedElement = { kind: 'object', id: objectId };
+        renderModel(state.model);
+        setStatus('Новый объект добавлен.');
+        return;
+      }
+    }
+
+    function getFactArityForMode(mode) {
+      if (mode === 'addUnaryFact') return 1;
+      if (mode === 'addBinaryFact') return 2;
+      if (mode === 'addTernaryFact') return 3;
+      return 0;
+    }
+
+    function defaultFactTemplate(arity) {
+      if (arity === 1) return '{0} существует';
+      if (arity === 2) return '{0} связан с {1}';
+      if (arity === 3) return '{0} связан с {1} и {2}';
+      return '{0}';
+    }
+
+    function buildDefaultFactVerbalized(objectNames, arity) {
+      if (arity === 1) return `${objectNames[0]} существует`;
+      if (arity === 2) return `${objectNames[0]} связан с ${objectNames[1]}`;
+      if (arity === 3) return `${objectNames[0]} связан с ${objectNames[1]} и ${objectNames[2]}`;
+      return objectNames.join(' ');
+    }
+
+    function createFactFromSelectedObjects(selectedIds) {
+      const arity = selectedIds.length;
+      const factId = generateConstraintId('fact');
+      const roleIds = selectedIds.map(() => generateConstraintId('role'));
+      const readingOrderId = generateConstraintId('readingOrder');
+      const readingId = generateConstraintId('reading');
+      const objectNames = selectedIds.map((id) => state.model.objectById.get(id)?.name || id);
+      const template = defaultFactTemplate(arity);
+      const verbalized = buildDefaultFactVerbalized(objectNames, arity);
+      const fact = {
+        id: factId,
+        type: 'Fact',
+        name: `${arity === 1 ? 'НовыйУнарныйФакт' : arity === 2 ? 'НовыйФакт' : 'НовыйТернарныйФакт'}${state.model.facts.length + 1}`,
+        roles: selectedIds.map((objectId, index) => ({
+          id: roleIds[index],
+          actualRoleId: roleIds[index],
+          isProxy: false,
+          factId,
+          factRoleIndex: index,
+          playerRef: objectId,
+          playerName: objectNames[index],
+          IsMandatory: false,
+          mandatory: false,
+          Multiplicity: 'Unspecified',
+          multiplicity: 'Unspecified',
+          name: `role${index + 1}`
+        })),
+        readings: [{
+          id: readingOrderId,
+          factId,
+          roleSequence: roleIds,
+          readings: [{
+            id: readingId,
+            template,
+            verbalized,
+            roleNames: objectNames
+          }]
+        }],
+        internalConstraintRefs: [],
+        uniquenessConstraints: []
+      };
+      state.model.facts.push(fact);
+
+      const objectShapes = selectedIds.map((id) => (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === id)).filter(Boolean);
+      const avgX = objectShapes.length ? objectShapes.reduce((sum, shape) => sum + shape.bounds.x, 0) / objectShapes.length : 1.5;
+      const avgY = objectShapes.length ? objectShapes.reduce((sum, shape) => sum + shape.bounds.y, 0) / objectShapes.length : 1.5;
+      const maxY = objectShapes.length ? Math.max(...objectShapes.map((shape) => shape.bounds.y)) : avgY;
+      const factWidth = arity === 1 ? 0.28 : arity === 2 ? 0.6 : 0.95;
+      const factShapeId = `shape_${factId}`;
+      state.model.diagram.factShapes.push({
+        id: factShapeId,
+        subjectRef: factId,
+        bounds: { x: avgX + 0.2, y: maxY + 0.8, w: factWidth, h: 0.34 }
+      });
+      state.model.diagram.readingShapes.push({
+        id: `readingshape_${factId}`,
+        subjectRef: readingOrderId,
+        factId,
+        parentFactShapeId: factShapeId,
+        bounds: { x: avgX - 0.8, y: maxY + 1.28, w: arity === 3 ? 3.2 : arity === 2 ? 2.4 : 1.6, h: 0.25 },
+        text: template
+      });
+      rebuildModelCaches(state.model);
+      state.pendingFactObjectRefs = [];
+      state.selectedElement = { kind: 'fact', id: factId };
+      renderModel(state.model);
+      setStatus(arity === 1 ? 'Новый унарный факт добавлен.' : arity === 2 ? 'Новый бинарный факт добавлен.' : 'Новый тернарный факт добавлен.');
+    }
+
+    function handleObjectPickForFact(objectId) {
+      const arity = getFactArityForMode(state.editorMode);
+      if (!arity || !state.model) return false;
+      if (!state.pendingFactObjectRefs.includes(objectId)) {
+        state.pendingFactObjectRefs.push(objectId);
+      }
+      if (state.pendingFactObjectRefs.length < arity) {
+        setStatus(`Выбрано объектов: ${state.pendingFactObjectRefs.length} из ${arity}. Продолжите выбор.`);
+        return true;
+      }
+      pushHistorySnapshot();
+      createFactFromSelectedObjects(state.pendingFactObjectRefs.slice(0, arity));
+      return true;
+    }
+
+    function clientToModelPoint(event) {
+      const svgPoint = elements.diagramSvg.createSVGPoint();
+      svgPoint.x = event.clientX;
+      svgPoint.y = event.clientY;
+      const transformed = svgPoint.matrixTransform(elements.diagramSvg.getScreenCTM().inverse());
+      return {
+        x: (transformed.x - state.diagramTransform.margin) / state.diagramTransform.scale + state.diagramTransform.minX,
+        y: (transformed.y - state.diagramTransform.margin) / state.diagramTransform.scale + state.diagramTransform.minY
+      };
+    }
+
+    function clientToSvgPoint(event) {
+      const svgPoint = elements.diagramSvg.createSVGPoint();
+      svgPoint.x = event.clientX;
+      svgPoint.y = event.clientY;
+      return svgPoint.matrixTransform(elements.diagramSvg.getScreenCTM().inverse());
+    }
+
+    function handleDiagramContextMenu(event) {
+      event.preventDefault();
+      const targetInfo = identifyDiagramTarget(event.target);
+      state.contextMenuTarget = targetInfo;
+      openContextMenu(event.clientX, event.clientY, targetInfo);
+    }
+
+    function identifyDiagramTarget(target) {
+      let node = target;
+      while (node && node !== elements.diagramSvg) {
+        if (node.getAttribute) {
+          if (node.getAttribute('data-role-ref')) {
+            return { kind: 'role', roleRef: node.getAttribute('data-role-ref') };
+          }
+          if (node.getAttribute('data-constraint-id')) {
+            const source = node.getAttribute('data-constraint-source') || 'external';
+            if (source === 'internal-uniqueness') {
+              return { kind: 'uniqueness', constraintId: node.getAttribute('data-constraint-id') };
+            }
+            return { kind: 'constraint', constraintId: node.getAttribute('data-constraint-id') };
+          }
+          if (node.getAttribute('data-element-kind')) {
+            return {
+              kind: node.getAttribute('data-element-kind'),
+              id: node.getAttribute('data-element-id')
+            };
+          }
+          if (node.getAttribute('data-canvas-bg') === 'true') {
+            return { kind: 'canvas' };
+          }
+        }
+        node = node.parentNode;
+      }
+      return { kind: 'canvas' };
+    }
+
+    function openContextMenu(x, y, targetInfo) {
+      const menu = elements.contextMenu;
+      const actions = buildContextMenuActions(targetInfo);
+      menu.innerHTML = actions.map((action) => {
+        if (action.separator) return '<div class="context-menu-sep"></div>';
+        return `<button type="button" data-menu-action="${escapeHtml(action.id)}">${escapeHtml(action.label)}</button>`;
+      }).join('');
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.classList.add('is-open');
+      menu.querySelectorAll('[data-menu-action]').forEach((button) => {
+        button.addEventListener('click', () => {
+          hideContextMenu();
+          runContextMenuAction(button.getAttribute('data-menu-action'), targetInfo);
+        });
+      });
+    }
+
+    function hideContextMenu() {
+      elements.contextMenu.classList.remove('is-open');
+      elements.contextMenu.innerHTML = '';
+    }
+
+    function buildContextMenuActions(targetInfo) {
+      if (targetInfo.kind === 'uniqueness') {
+        return [
+          { id: 'select-uniqueness', label: 'Выбрать uniqueness' },
+          { id: 'toggle-uniqueness-preferred', label: 'Переключить preferred' },
+          { id: 'choose-uniqueness-target', label: 'Выбрать PreferredFor' },
+          { id: 'delete-uniqueness', label: 'Удалить uniqueness' }
+        ];
+      }
+      if (targetInfo.kind === 'object') {
+        return [
+          { id: 'edit-object', label: 'Редактировать объект' },
+          { id: 'delete-object', label: 'Удалить объект' },
+          { separator: true },
+          { id: 'select-object', label: 'Выбрать объект' }
+        ];
+      }
+      if (targetInfo.kind === 'fact') {
+        return [
+          { id: 'edit-fact', label: 'Редактировать факт' },
+          { id: 'delete-fact', label: 'Удалить факт' },
+          { separator: true },
+          { id: 'select-fact', label: 'Выбрать факт' }
+        ];
+      }
+      if (targetInfo.kind === 'role') {
+        return [
+          { id: 'edit-role', label: 'Редактировать роль' },
+          { id: 'toggle-role-mandatory', label: 'Переключить mandatory' },
+          { id: 'toggle-role-uniqueness', label: 'Переключить uniqueness' },
+          { id: 'toggle-role-select', label: 'Добавить/убрать из selection' }
+        ];
+      }
+      if (targetInfo.kind === 'constraint') {
+        return [
+          { id: 'edit-constraint', label: 'Редактировать ограничение' },
+          { id: 'delete-constraint', label: 'Удалить ограничение' },
+          { id: 'select-constraint', label: 'Выбрать ограничение' }
+        ];
+      }
+      return [
+        { id: 'canvas-add-entity', label: 'Добавить Entity' },
+        { id: 'canvas-add-value', label: 'Добавить Value' },
+        { id: 'canvas-add-unary-fact', label: 'Добавить Unary Fact' },
+        { id: 'canvas-add-binary-fact', label: 'Добавить Binary Fact' },
+        { id: 'canvas-add-ternary-fact', label: 'Добавить Ternary Fact' },
+        { separator: true },
+        { id: 'canvas-export-svg', label: 'Export SVG' },
+        { id: 'canvas-export-png', label: 'Export PNG' }
+      ];
+    }
+
+    function runContextMenuAction(actionId, targetInfo) {
+      if (!state.model && !actionId.startsWith('canvas-export')) return;
+      switch (actionId) {
+        case 'select-uniqueness':
+          selectConstraint(targetInfo.constraintId);
+          break;
+        case 'toggle-uniqueness-preferred':
+          togglePreferredUniqueness(targetInfo.constraintId);
+          break;
+        case 'choose-uniqueness-target':
+          choosePreferredTargetForConstraint(targetInfo.constraintId);
+          break;
+        case 'delete-uniqueness':
+          selectConstraint(targetInfo.constraintId);
+          deleteSelectedConstraint();
+          break;
+        case 'edit-object':
+          selectElement('object', targetInfo.id);
+          quickEditObject(targetInfo.id);
+          break;
+        case 'delete-object':
+          selectElement('object', targetInfo.id);
+          deleteSelectedObject();
+          break;
+        case 'select-object':
+          selectElement('object', targetInfo.id);
+          break;
+        case 'edit-fact':
+          selectElement('fact', targetInfo.id);
+          quickEditFact(targetInfo.id);
+          break;
+        case 'delete-fact':
+          selectElement('fact', targetInfo.id);
+          deleteSelectedFact();
+          break;
+        case 'select-fact':
+          selectElement('fact', targetInfo.id);
+          break;
+        case 'edit-role':
+          quickEditRole(targetInfo.roleRef);
+          break;
+        case 'toggle-role-mandatory':
+          toggleRoleMandatory(targetInfo.roleRef);
+          break;
+        case 'toggle-role-uniqueness':
+          toggleRoleUniqueness(targetInfo.roleRef);
+          break;
+        case 'toggle-role-select':
+          toggleRoleSelection(targetInfo.roleRef);
+          break;
+        case 'edit-constraint':
+          selectConstraint(targetInfo.constraintId);
+          break;
+        case 'delete-constraint':
+          selectConstraint(targetInfo.constraintId);
+          deleteSelectedConstraint();
+          break;
+        case 'select-constraint':
+          selectConstraint(targetInfo.constraintId);
+          break;
+        case 'canvas-add-entity':
+          setEditorMode('addEntity');
+          break;
+        case 'canvas-add-value':
+          setEditorMode('addValue');
+          break;
+        case 'canvas-add-unary-fact':
+          setEditorMode('addUnaryFact');
+          break;
+        case 'canvas-add-binary-fact':
+          setEditorMode('addBinaryFact');
+          break;
+        case 'canvas-add-ternary-fact':
+          setEditorMode('addTernaryFact');
+          break;
+        case 'canvas-export-svg':
+          exportCurrentSvg();
+          break;
+        case 'canvas-export-png':
+          exportCurrentPng();
+          break;
+        default:
+          break;
+      }
+    }
+
+    function handleDocumentClick(event) {
+      if (!elements.contextMenu.contains(event.target)) hideContextMenu();
+    }
+
+    function handleDocumentKeydown(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redoEdit();
+        else undoEdit();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        redoEdit();
+      }
+      if (event.key === 'Escape') {
+        hideContextMenu();
+        if (state.marqueeInfo) finishMarqueeSelection();
+      }
+    }
+
+    function quickEditObject(objectId) {
+      const object = state.model?.objects.find((item) => item.id === objectId);
+      if (!object) return;
+      const newName = prompt('Имя объекта', object.name || '');
+      if (newName === null) return;
+      pushHistorySnapshot();
+      object.name = newName.trim() || object.name;
+      if (object.type !== 'ValueType') {
+        const newRefMode = prompt('Ключи (через запятую)', objectRefModesText(object) || '');
+        if (newRefMode !== null) {
+          object.refModes = parseRefModesInput(newRefMode);
+          object.refMode = object.refModes[0] || '';
+        }
+      }
+      rebuildModelCaches(state.model);
+      renderModel(state.model);
+      setStatus('Объект обновлён.');
+    }
+
+    function quickEditFact(factId) {
+      const fact = state.model?.facts.find((item) => item.id === factId);
+      if (!fact) return;
+      const newName = prompt('Имя факта', fact.name || '');
+      if (newName === null) return;
+      pushHistorySnapshot();
+      fact.name = newName.trim() || fact.name;
+      const reading = fact.readings?.[0]?.readings?.[0];
+      if (reading) {
+        const newTemplate = prompt('Reading template', reading.template || '');
+        if (newTemplate !== null) {
+          reading.template = newTemplate.trim();
+          reading.verbalized = verbalize(reading.template, reading.roleNames || []);
+        }
+      }
+      renderModel(state.model);
+      setStatus('Факт обновлён.');
+    }
+
+    function quickEditRole(roleRef) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return;
+      const newName = prompt('Имя роли', role.name || '');
+      if (newName === null) return;
+      pushHistorySnapshot();
+      role.name = newName.trim();
+      const mandatoryInput = prompt('Обязательность (true/false)', String(role.IsMandatory ?? role.mandatory ?? false));
+      if (mandatoryInput !== null) {
+        const value = String(mandatoryInput).trim().toLowerCase() === 'true';
+        role.IsMandatory = value;
+        role.mandatory = value;
+      }
+      const multiplicityInput = prompt('Кардинальность', role.Multiplicity || role.multiplicity || 'Unspecified');
+      if (multiplicityInput !== null) {
+        role.Multiplicity = multiplicityInput.trim() || 'Unspecified';
+        role.multiplicity = role.Multiplicity;
+      }
+      renderModel(state.model);
+      setStatus('Роль обновлена.');
+    }
+
+    function getSingleRoleUniquenessConstraint(fact, roleRef) {
+      return (fact?.uniquenessConstraints || []).find((constraint) => normalizedRoleRefKey(constraint.roleRefs || []) === normalizedRoleRefKey([roleRef]));
+    }
+
+    function hasSingleRoleUniqueness(fact, roleRef) {
+      return !!getSingleRoleUniquenessConstraint(fact, roleRef);
+    }
+
+    function isManyMultiplicity(multiplicity) {
+      return ['ZeroToMany', 'OneToMany'].includes(multiplicity || '');
+    }
+
+    function reconcileBinaryFactCompositeUniqueness(fact) {
+      if (!fact || (fact.roles || []).length !== 2) return;
+      const roleRefs = (fact.roles || []).map((role) => role.id || role.actualRoleId).filter(Boolean);
+      if (roleRefs.length !== 2) return;
+      const bothMany = (fact.roles || []).every((role) => isManyMultiplicity(role.Multiplicity || role.multiplicity));
+
+      fact.uniquenessConstraints = (fact.uniquenessConstraints || []).filter((constraint) => {
+        if (constraint.autoCompositeBinary) {
+          return bothMany;
+        }
+        if (bothMany && (constraint.roleRefs || []).length === 1 && roleRefs.includes((constraint.roleRefs || [])[0])) {
+          return false;
+        }
+        return true;
+      });
+
+      if (bothMany) {
+        const existingComposite = (fact.uniquenessConstraints || []).find((constraint) => normalizedRoleRefKey(constraint.roleRefs || []) === normalizedRoleRefKey(roleRefs));
+        if (!existingComposite) {
+          fact.uniquenessConstraints.push({
+            id: generateConstraintId('intuc'),
+            name: 'AutoBinaryFactUniqueness',
+            roleRefs: roleRefs.slice(),
+            preferred: false,
+            preferredForRef: '',
+            isInternal: true,
+            isSimple: false,
+            isImplied: false,
+            type: 'UniquenessConstraint',
+            userCreated: true,
+            autoCompositeBinary: true
+          });
+          state.model.constraintsCount += 1;
+        } else {
+          existingComposite.autoCompositeBinary = true;
+        }
+      }
+    }
+
+    function syncRoleMultiplicityFromFlags(role, uniqueValue = null) {
+      const mandatoryValue = !!(role.IsMandatory ?? role.mandatory);
+      const unique = uniqueValue !== null ? uniqueValue : false;
+      if (mandatoryValue && unique) role.Multiplicity = role.multiplicity = 'ExactlyOne';
+      else if (!mandatoryValue && unique) role.Multiplicity = role.multiplicity = 'ZeroToOne';
+      else if (mandatoryValue && !unique) role.Multiplicity = role.multiplicity = 'OneToMany';
+      else role.Multiplicity = role.multiplicity = 'ZeroToMany';
+      const fact = state.model?.factsById.get(role.factId);
+      if (fact) reconcileBinaryFactCompositeUniqueness(fact);
+    }
+
+    function setRoleUniqueness(roleRef, desiredValue, options = {}) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return false;
+      const fact = state.model?.factsById.get(role.factId);
+      if (!fact) return false;
+      const actualRoleRef = role.id || role.actualRoleId;
+      const existing = getSingleRoleUniquenessConstraint(fact, actualRoleRef);
+      const currentValue = !!existing;
+      if (currentValue === desiredValue) {
+        if (!options.skipMultiplicity) syncRoleMultiplicityFromFlags(role, currentValue);
+        return false;
+      }
+      if (!options.skipHistory) pushHistorySnapshot();
+
+      if (desiredValue) {
+        fact.uniquenessConstraints.push({
+          id: generateConstraintId('intuc'),
+          name: 'UserInternalUC',
+          roleRefs: [actualRoleRef],
+          preferred: false,
+          preferredForRef: '',
+          isInternal: true,
+          isSimple: true,
+          isImplied: false,
+          type: 'UniquenessConstraint',
+          userCreated: true
+        });
+        state.model.constraintsCount += 1;
+      } else if (existing) {
+        fact.uniquenessConstraints = (fact.uniquenessConstraints || []).filter((constraint) => constraint.id !== existing.id);
+        state.model.constraintsCount = Math.max(0, (state.model.constraintsCount || 1) - 1);
+        if (state.selectedConstraintId === existing.id) state.selectedConstraintId = null;
+      }
+      if (!options.skipMultiplicity) syncRoleMultiplicityFromFlags(role, desiredValue);
+      if (!options.silent) {
+        renderModel(state.model);
+        setStatus(desiredValue ? 'Уникальность роли включена.' : 'Уникальность роли выключена.');
+      }
+      return true;
+    }
+
+    function toggleRoleUniqueness(roleRef) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return;
+      const fact = state.model?.factsById.get(role.factId);
+      if (!fact) return;
+      const desiredValue = !hasSingleRoleUniqueness(fact, role.id || role.actualRoleId);
+      setRoleUniqueness(roleRef, desiredValue);
+    }
+
+    function addFactUniquenessFromSelection(preferred = false) {
+      const fact = getSelectedElementData();
+      if (!fact || state.selectedElement?.kind !== 'fact') {
+        setStatus('Сначала выберите факт.', true);
+        return;
+      }
+      const selectedRefs = state.selectedRoleRefs.slice();
+      if (!selectedRefs.length) {
+        setStatus('Выберите роли факта на диаграмме.', true);
+        return;
+      }
+      const allInFact = selectedRefs.every((roleRef) => {
+        const role = state.model.roleMeta.get(roleRef);
+        return role?.factId === fact.id;
+      });
+      if (!allInFact) {
+        setStatus('Все выбранные роли должны принадлежать одному выбранному факту.', true);
+        return;
+      }
+      const key = normalizedRoleRefKey(selectedRefs);
+      const exists = (fact.uniquenessConstraints || []).some((constraint) => normalizedRoleRefKey(constraint.roleRefs || []) === key);
+      if (exists) {
+        setStatus('Такой uniqueness уже существует.', true);
+        return;
+      }
+      pushHistorySnapshot();
+      const entry = {
+        id: generateConstraintId('intuc'),
+        name: preferred ? 'UserPreferredInternalUC' : 'UserInternalUC',
+        roleRefs: selectedRefs,
+        preferred,
+        preferredForRef: preferred ? guessPreferredTargetRef({ fact, constraint: { roleRefs: selectedRefs } }) : '',
+        isInternal: true,
+        isSimple: selectedRefs.length === 1,
+        isImplied: false,
+        type: 'UniquenessConstraint',
+        userCreated: true
+      };
+      fact.uniquenessConstraints.push(entry);
+      state.model.constraintsCount += 1;
+      state.selectedConstraintId = entry.id;
+      renderModel(state.model);
+      setStatus(preferred ? 'Preferred uniqueness добавлен к факту.' : 'Uniqueness добавлен к факту.');
+    }
+
+    function addPreferredFactUniquenessFromSelection() {
+      addFactUniquenessFromSelection(true);
+    }
+
+    function deleteFactUniqueness(constraintId) {
+      const fact = getSelectedElementData();
+      if (!fact || state.selectedElement?.kind !== 'fact') return;
+      const exists = (fact.uniquenessConstraints || []).some((constraint) => constraint.id === constraintId);
+      if (!exists) return;
+      pushHistorySnapshot();
+      fact.uniquenessConstraints = (fact.uniquenessConstraints || []).filter((constraint) => constraint.id !== constraintId);
+      state.model.constraintsCount = Math.max(0, (state.model.constraintsCount || 1) - 1);
+      if (state.selectedConstraintId === constraintId) state.selectedConstraintId = null;
+      renderModel(state.model);
+      setStatus('Uniqueness удалён.');
+    }
+
+    function setRoleMandatory(roleRef, desiredValue, options = {}) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return false;
+      const fact = state.model?.factsById.get(role.factId);
+      const currentValue = !!(role.IsMandatory ?? role.mandatory);
+      if (currentValue === desiredValue) {
+        const unique = !!getSingleRoleUniquenessConstraint(fact, role.id || role.actualRoleId);
+        if (!options.skipMultiplicity) syncRoleMultiplicityFromFlags(role, unique);
+        return false;
+      }
+      if (!options.skipHistory) pushHistorySnapshot();
+      role.IsMandatory = desiredValue;
+      role.mandatory = desiredValue;
+      const unique = !!getSingleRoleUniquenessConstraint(fact, role.id || role.actualRoleId);
+      if (!options.skipMultiplicity) syncRoleMultiplicityFromFlags(role, unique);
+      if (!options.silent) {
+        renderModel(state.model);
+        setStatus(desiredValue ? 'Обязательность роли включена.' : 'Обязательность роли выключена.');
+      }
+      return true;
+    }
+
+    function multiplicityImplications(multiplicity) {
+      switch (multiplicity) {
+        case 'ExactlyOne':
+          return { mandatory: true, unique: true };
+        case 'ZeroToOne':
+          return { mandatory: false, unique: true };
+        case 'OneToMany':
+          return { mandatory: true, unique: false };
+        case 'ZeroToMany':
+          return { mandatory: false, unique: false };
+        case 'Unspecified':
+        default:
+          return { mandatory: false, unique: false };
+      }
+    }
+
+    function setRoleMultiplicity(roleRef, multiplicity) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return;
+      const normalizedMultiplicity = multiplicity || 'Unspecified';
+      const implications = multiplicityImplications(normalizedMultiplicity);
+      pushHistorySnapshot();
+      role.Multiplicity = normalizedMultiplicity;
+      role.multiplicity = normalizedMultiplicity;
+      role.IsMandatory = implications.mandatory;
+      role.mandatory = implications.mandatory;
+      setRoleUniqueness(roleRef, implications.unique, { skipHistory: true, silent: true, skipMultiplicity: true });
+      const fact = state.model?.factsById.get(role.factId);
+      if (fact) reconcileBinaryFactCompositeUniqueness(fact);
+      renderModel(state.model);
+      setStatus(`Кардинальность роли изменена: ${normalizedMultiplicity}.`);
+    }
+
+    function toggleRoleMandatory(roleRef) {
+      const role = state.model?.roleMeta.get(roleRef);
+      if (!role) return;
+      const nextValue = !(role.IsMandatory ?? role.mandatory);
+      setRoleMandatory(roleRef, nextValue);
+    }
+
+    function createNewDiagram() {
+      loadOrmText(EMPTY_ORM, 'new-diagram.orm');
+      setEditorMode('select');
+      setStatus('Создана новая пустая диаграмма.');
+    }
+
+    function exportCurrentSvg() {
+      if (!state.model) {
+        setStatus('Нет диаграммы для экспорта.', true);
+        return;
+      }
+      const svg = elements.diagramSvg.cloneNode(true);
+      svg.setAttribute('xmlns', svgNs);
+      const data = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(state.model.fileName || 'diagram').replace(/\.[^.]+$/, '')}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus('SVG экспортирован.');
+    }
+
+    function exportCurrentPng() {
+      if (!state.model) {
+        setStatus('Нет диаграммы для экспорта.', true);
+        return;
+      }
+      const svg = elements.diagramSvg.cloneNode(true);
+      svg.setAttribute('xmlns', svgNs);
+      const svgText = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const width = Number(elements.diagramSvg.getAttribute('width')) || 1200;
+        const height = Number(elements.diagramSvg.getAttribute('height')) || 800;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((pngBlob) => {
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const link = document.createElement('a');
+          link.href = pngUrl;
+          link.download = `${(state.model.fileName || 'diagram').replace(/\.[^.]+$/, '')}.png`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(pngUrl);
+          setStatus('PNG экспортирован.');
+        });
+      };
+      img.src = url;
+    }
+
+    function downloadNormaCompatibilityReport() {
+      if (!state.model) {
+        setStatus('Нет модели для формирования отчёта.', true);
+        return;
+      }
+      const validation = validateExportedOrm(state.model, { strictNorma: state.strictNormaExport });
+      const report = buildNormaCompatibilityReport(state.model, validation);
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(state.model.fileName || 'model').replace(/\.[^.]+$/, '')}-orm-report.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus('Отчёт ORM сохранён.');
+    }
+
+    function buildNormaCompatibilityReport(model, validation = null) {
+      const check = validation || validateExportedOrm(model, { strictNorma: state.strictNormaExport });
+      const uniquenessWarnings = check.warnings;
+      const uniqueness = collectAllUniquenessConstraints(model);
+      const mandatory = collectAllMandatoryConstraints(model);
+      const external = collectAllExternalConstraints(model);
+      const lines = [
+        `Отчёт структуры ORM-модели`,
+        `Модель: ${model.name || 'Без имени'}`,
+        `Файл: ${model.fileName || 'Без файла'}`,
+        `Дата: ${new Date().toLocaleString('ru-RU')}`,
+        '',
+        `Статистика:`,
+        `- Object types: ${model.objects.length}`,
+        `- Facts: ${model.facts.length}`,
+        `- Constraints: ${model.constraintsCount}`,
+        `- Uniqueness: ${uniqueness.length}`,
+        `- Mandatory: ${mandatory.length}`,
+        `- External constraints: ${external.length}`,
+        '',
+        `Warnings (${uniquenessWarnings.length}):`
+      ];
+      if (uniquenessWarnings.length) lines.push(...uniquenessWarnings.map((item) => `- ${item}`));
+      else lines.push('- Существенных конфликтов не обнаружено.');
+      lines.push('', 'Uniqueness constraints:');
+      if (uniqueness.length) lines.push(...uniqueness.map((item) => `- ${item.label}${item.preferred ? ' [preferred]' : ''}`));
+      else lines.push('- Нет uniqueness constraints.');
+      lines.push('', 'Mandatory constraints:');
+      if (mandatory.length) lines.push(...mandatory.map((item) => `- ${item.label}`));
+      else lines.push('- Нет mandatory constraints.');
+      lines.push('', 'External constraints:');
+      if (external.length) lines.push(...external.map((item) => `- ${item.typeLabel}: ${item.label}`));
+      else lines.push('- Нет external constraints.');
+      lines.push('', 'Структурная валидация XML/ORM:');
+      lines.push(`- Ошибок: ${check.errors.length}`);
+      lines.push(`- Предупреждений: ${check.warnings.length}`);
+      if (check.errors.length) lines.push(...check.errors.map((item) => `  ERROR: ${item}`));
+      if (check.warnings.length) lines.push(...check.warnings.map((item) => `  WARN: ${item}`));
+      return lines.join('\n');
+    }
+
+    function buildValidationReportText(validation) {
+      const lines = [
+        'Проверка ORM перед сохранением',
+        `Ошибок: ${validation.errors.length}`,
+        `Предупреждений: ${validation.warnings.length}`,
+        '',
+        'Ошибки:'
+      ];
+      if (validation.errors.length) lines.push(...validation.errors.map((item) => `- ${item}`));
+      else lines.push('- Ошибок не обнаружено.');
+      lines.push('', 'Предупреждения:');
+      if (validation.warnings.length) lines.push(...validation.warnings.map((item) => `- ${item}`));
+      else lines.push('- Предупреждений не обнаружено.');
+      return lines.join('\n');
+    }
+
+    function downloadCurrentOrm() {
+      if (!state.model) {
+        setStatus('Нет модели для сохранения.', true);
+        return;
+      }
+
+      const validation = validateExportedOrm(state.model, { strictNorma: state.strictNormaExport });
+      if (state.strictNormaExport && validation.errors.length) {
+        state.xmlPreviewMode = 'report';
+        refreshXmlPreview(validation);
+        toggleXmlDrawer(true);
+        setStatus(`Сохранение отменено: найдено ${validation.errors.length} структурных ошибок ORM-XML.`, true);
+        return;
+      }
+
+      const serialized = serializeModelToOrm(state.model, { strictNorma: state.strictNormaExport });
+      state.model.sourceText = serialized;
+      refreshXmlPreview();
+      const blob = new Blob([serialized], { type: 'application/xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = state.model.fileName && state.model.fileName.toLowerCase().endsWith('.orm')
+        ? state.model.fileName
+        : `${(state.model.fileName || 'model').replace(/\.[^.]+$/, '')}.orm`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setStatus(validation.warnings.length ? `Файл .orm сохранён с предупреждениями: ${validation.warnings.length}.` : 'Файл .orm сохранён.');
+    }
+
+    function refreshXmlPreview(validation = null) {
+      if (!state.model) {
+        elements.xmlDrawerTitle.textContent = 'XML для сохранения';
+        elements.sourcePreview.textContent = 'Файл ещё не загружен.';
+        return;
+      }
+      if (state.xmlPreviewMode === 'source') {
+        elements.xmlDrawerTitle.textContent = 'Исходный XML';
+        elements.sourcePreview.textContent = state.model.sourceText || 'Исходный XML недоступен.';
+        return;
+      }
+      if (state.xmlPreviewMode === 'report') {
+        elements.xmlDrawerTitle.textContent = 'Отчёт проверки ORM';
+        const check = validation || validateExportedOrm(state.model, { strictNorma: state.strictNormaExport });
+        elements.sourcePreview.textContent = buildValidationReportText(check);
+        return;
+      }
+      elements.xmlDrawerTitle.textContent = 'XML для сохранения';
+      elements.sourcePreview.textContent = serializeModelToOrm(state.model, { strictNorma: state.strictNormaExport });
+    }
+
+    function serializeModelToOrm(model, options = {}) {
+      const xmlDoc = createFreshOrmDocument(model);
+      const root = xmlDoc.documentElement;
+      const ormModelEl = findFirstByLocalName(xmlDoc, 'ORMModel');
+      const objectsSection = firstChildElement(ormModelEl, 'Objects') || createChildNS(xmlDoc, ormModelEl, coreNs(root), 'orm:Objects');
+      const factsSection = firstChildElement(ormModelEl, 'Facts') || createChildNS(xmlDoc, ormModelEl, coreNs(root), 'orm:Facts');
+      const constraintsSection = firstChildElement(ormModelEl, 'Constraints') || createChildNS(xmlDoc, ormModelEl, coreNs(root), 'orm:Constraints');
+      const diagramEl = ensureDiagramElement(xmlDoc, root, ormModelEl, model);
+
+      ensureLlmNamespace(root);
+      syncObjectsToXml(xmlDoc, objectsSection, model);
+      syncFactsToXml(xmlDoc, factsSection, model);
+      writeDiagramState(xmlDoc, diagramEl, model);
+      syncConstraintsToXml(xmlDoc, constraintsSection, factsSection, model);
+      syncLlmDigest(xmlDoc, root, model);
+      normalizeOrmAttributeCasing(xmlDoc);
+      if (options.strictNorma !== false) {
+        applyStrictNormaCleanup(xmlDoc);
+      }
+      stripEditorExtensions(xmlDoc);
+
+      const serialized = new XMLSerializer().serializeToString(xmlDoc);
+      return finalizeSerializedOrmString(serialized);
+    }
+
+    function createFreshOrmDocument(model) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(
+        `<?xml version="1.0" encoding="utf-8"?><ormRoot:ORM2 xmlns:orm="http://schemas.neumont.edu/ORM/2006-04/ORMCore" xmlns:ormDiagram="http://schemas.neumont.edu/ORM/2006-04/ORMDiagram" xmlns:ormRoot="http://schemas.neumont.edu/ORM/2006-04/ORMRoot"></ormRoot:ORM2>`,
+        'application/xml'
+      );
+      const root = xmlDoc.documentElement;
+
+      const sourceDoc = model.xmlDoc && !model.xmlDoc.getElementsByTagName('parsererror').length
+        ? model.xmlDoc
+        : parser.parseFromString(model.sourceText || '', 'application/xml');
+      const sourceOrmModel = findFirstByLocalName(sourceDoc, 'ORMModel');
+      const sourceDiagram = findFirstByLocalName(sourceDoc, 'ORMDiagram');
+      const sourceDisplayState = findFirstByLocalName(sourceDoc, 'DisplayState');
+
+      const coreNamespace = coreNs(root);
+      const diagramNamespace = diagramNs(root);
+
+      const ormModelEl = xmlDoc.createElementNS(coreNamespace, 'orm:ORMModel');
+      ormModelEl.setAttribute('id', sourceOrmModel?.getAttribute('id') || 'model1');
+      ormModelEl.setAttribute('Name', model.name || sourceOrmModel?.getAttribute('Name') || 'ORMModel');
+      root.appendChild(ormModelEl);
+
+      createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:Objects');
+      createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:Facts');
+      createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:Constraints');
+      createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:DataTypes');
+      createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:ReferenceModeKinds');
+
+      const displayStateEl = xmlDoc.createElementNS(coreNamespace, 'orm:DisplayState');
+      displayStateEl.setAttribute('id', sourceDisplayState?.getAttribute('id') || 'displaystate_1');
+      const displayModelRefEl = xmlDoc.createElementNS(coreNamespace, 'orm:ORMModel');
+      displayModelRefEl.setAttribute('ref', ormModelEl.getAttribute('id'));
+      displayStateEl.appendChild(displayModelRefEl);
+      root.appendChild(displayStateEl);
+
+      const diagramEl = xmlDoc.createElementNS(diagramNamespace, 'ormDiagram:ORMDiagram');
+      diagramEl.setAttribute('id', sourceDiagram?.getAttribute('id') || 'diag1');
+      diagramEl.setAttribute('IsCompleteView', sourceDiagram?.getAttribute('IsCompleteView') || 'false');
+      diagramEl.setAttribute('Name', model.name || sourceDiagram?.getAttribute('Name') || 'ORMModel');
+      diagramEl.setAttribute('BaseFontName', sourceDiagram?.getAttribute('BaseFontName') || 'Tahoma');
+      diagramEl.setAttribute('BaseFontSize', sourceDiagram?.getAttribute('BaseFontSize') || '0.0972222238779068');
+      const shapesEl = xmlDoc.createElementNS(diagramNamespace, 'ormDiagram:Shapes');
+      diagramEl.appendChild(shapesEl);
+      const diagramSubjectEl = xmlDoc.createElementNS(diagramNamespace, 'ormDiagram:Subject');
+      diagramSubjectEl.setAttribute('ref', ormModelEl.getAttribute('id'));
+      diagramEl.appendChild(diagramSubjectEl);
+      root.appendChild(diagramEl);
+
+      return xmlDoc;
+    }
+
+    function normalizeOrmAttributeCasing(xmlDoc) {
+      const attrMap = new Map([
+        ['isMandatory', 'IsMandatory'],
+        ['multiplicity', 'Multiplicity'],
+        ['isInternal', 'IsInternal'],
+        ['isSimple', 'IsSimple'],
+        ['isIndependent', 'IsIndependent'],
+        ['isExpanded', 'IsExpanded'],
+        ['isCompleteView', 'IsCompleteView'],
+        ['expandRefMode', 'ExpandRefMode'],
+        ['absoluteBounds', 'AbsoluteBounds'],
+        ['baseFontName', 'BaseFontName'],
+        ['baseFontSize', 'BaseFontSize'],
+        ['saveDiagramPosition', 'SaveDiagramPosition'],
+        ['centerPoint', 'CenterPoint'],
+        ['zoomFactor', 'ZoomFactor']
+      ]);
+
+      Array.from(xmlDoc.getElementsByTagName('*')).forEach((el) => {
+        Array.from(el.attributes || []).forEach((attr) => {
+          const targetName = attrMap.get(attr.name);
+          if (!targetName) return;
+          if (!el.hasAttribute(targetName)) {
+            el.setAttribute(targetName, attr.value);
+          }
+          el.removeAttribute(attr.name);
+        });
+      });
+    }
+
+    function applyStrictNormaCleanup(xmlDoc) {
+      Array.from(xmlDoc.getElementsByTagName('*')).forEach((el) => {
+        Array.from(el.attributes || []).forEach((attr) => {
+          if ((attr.name === '_ReferenceMode' || attr.name === 'Name') && attr.value === '') {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      pruneUnusedDataTypes(xmlDoc);
+    }
+
+    function pruneUnusedDataTypes(xmlDoc) {
+      const ormModelEl = findFirstByLocalName(xmlDoc, 'ORMModel');
+      const dataTypesEl = firstChildElement(ormModelEl, 'DataTypes');
+      if (!dataTypesEl) return;
+      const usedRefs = new Set(
+        Array.from(xmlDoc.getElementsByTagName('*'))
+          .filter((el) => el.localName === 'ConceptualDataType')
+          .map((el) => el.getAttribute('ref'))
+          .filter(Boolean)
+      );
+      elementChildren(dataTypesEl).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (!usedRefs.has(id)) child.remove();
+      });
+    }
+
+    function validateExportedOrm(model, options = {}) {
+      const strictNorma = options.strictNorma !== false;
+      const serialized = serializeModelToOrm(model, { strictNorma });
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(serialized, 'application/xml');
+      const errors = [];
+      const warnings = [...validateUniquenessConflicts(model)];
+      const parserError = xmlDoc.getElementsByTagName('parsererror')[0];
+      if (parserError) {
+        errors.push('XML содержит ошибку разбора.');
+      }
+
+      const ids = new Map();
+      const refs = [];
+      const badAttrs = [];
+      const disallowedNamespaces = [];
+      const attrMap = new Set(['isMandatory', 'multiplicity', 'isInternal', 'isSimple', 'isIndependent', 'isExpanded', 'expandRefMode', 'absoluteBounds', 'baseFontName', 'baseFontSize']);
+
+      Array.from(xmlDoc.getElementsByTagName('*')).forEach((el) => {
+        const id = el.getAttribute('id');
+        if (id) {
+          if (ids.has(id)) errors.push(`Повторяющийся id: ${id}`);
+          else ids.set(id, el.localName);
+        }
+        Array.from(el.attributes || []).forEach((attr) => {
+          if (attr.name === 'ref') refs.push({ ref: attr.value, node: el.localName });
+          if (attrMap.has(attr.name)) badAttrs.push(`${el.localName}@${attr.name}`);
+          if (attr.name.startsWith('arena:') || attr.name.startsWith('app:')) disallowedNamespaces.push(`${el.localName}@${attr.name}`);
+        });
+      });
+
+      refs.forEach((item) => {
+        if (!ids.has(item.ref)) {
+          errors.push(`Ссылка ref="${item.ref}" из ${item.node} не указывает на существующий id.`);
+        }
+      });
+      badAttrs.forEach((item) => errors.push(`Атрибут в неверном регистре: ${item}`));
+      disallowedNamespaces.forEach((item) => errors.push(`Недопустимое editor-extension свойство в экспорте: ${item}`));
+
+      if (xmlDoc.documentElement.hasAttribute('xmlns:arena') || xmlDoc.documentElement.hasAttribute('xmlns:app')) {
+        errors.push('В экспортируемом XML остались editor namespaces arena/app.');
+      }
+
+      (model.objects || []).forEach((object) => {
+        if (object.type === 'EntityType' && !String(object.dataType || '').trim()) {
+          errors.push(`EntityType «${object.name}» не имеет DataType.`);
+        }
+        if (object.type === 'EntityType' && !(Array.isArray(object.refModes) ? object.refModes.length : String(object.refMode || '').trim())) {
+          warnings.push(`EntityType «${object.name}» не имеет ключа.`);
+        }
+      });
+
+      return { strictNorma, errors: [...new Set(errors)], warnings: [...new Set(warnings)], serialized };
+    }
+
+    function finalizeSerializedOrmString(xml) {
+      let output = String(xml || '');
+      if (!/^<\?xml\s+/i.test(output)) {
+        output = `<?xml version="1.0" encoding="utf-8"?>${output}`;
+      }
+      return output
+        .replace(/\bisMandatory=/g, 'IsMandatory=')
+        .replace(/\bmultiplicity=/g, 'Multiplicity=')
+        .replace(/\bisInternal=/g, 'IsInternal=')
+        .replace(/\bisSimple=/g, 'IsSimple=')
+        .replace(/\bisIndependent=/g, 'IsIndependent=')
+        .replace(/\bisExpanded=/g, 'IsExpanded=')
+        .replace(/\bexpandRefMode=/g, 'ExpandRefMode=')
+        .replace(/\babsoluteBounds=/g, 'AbsoluteBounds=')
+        .replace(/\bbaseFontName=/g, 'BaseFontName=')
+        .replace(/\bbaseFontSize=/g, 'BaseFontSize=');
+    }
+
+    function stripEditorExtensions(xmlDoc) {
+      const root = xmlDoc.documentElement;
+      root.removeAttribute('xmlns:arena');
+      root.removeAttribute('xmlns:app');
+      Array.from(xmlDoc.getElementsByTagName('*')).forEach((el) => {
+        Array.from(el.attributes || []).forEach((attr) => {
+          if (attr.name.startsWith('arena:') || attr.name.startsWith('app:')) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+    }
+
+    function coreNs(root) {
+      return root.lookupNamespaceURI('orm') || 'http://schemas.neumont.edu/ORM/2006-04/ORMCore';
+    }
+
+    function diagramNs(root) {
+      return root.lookupNamespaceURI('ormDiagram') || 'http://schemas.neumont.edu/ORM/2006-04/ORMDiagram';
+    }
+
+    function findFirstByLocalName(doc, localName) {
+      return Array.from(doc.getElementsByTagName('*')).find((el) => el.localName === localName) || null;
+    }
+
+    function findXmlElementById(doc, id) {
+      return Array.from(doc.getElementsByTagName('*')).find((el) => el.getAttribute('id') === id) || null;
+    }
+
+    function createChildNS(doc, parent, ns, qName) {
+      const child = doc.createElementNS(ns, qName);
+      parent.appendChild(child);
+      return child;
+    }
+
+    function ensureDiagramElement(xmlDoc, root, ormModelEl, model) {
+      let diagramEl = findFirstByLocalName(xmlDoc, 'ORMDiagram');
+      if (!diagramEl) {
+        diagramEl = xmlDoc.createElementNS(diagramNs(root), 'ormDiagram:ORMDiagram');
+        diagramEl.setAttribute('id', `arena_diag_${Date.now()}`);
+        diagramEl.setAttribute('Name', model.name || 'ORMModel');
+        diagramEl.setAttribute('IsCompleteView', 'false');
+        diagramEl.setAttribute('BaseFontName', 'Tahoma');
+        diagramEl.setAttribute('BaseFontSize', '0.0972222238779068');
+        const shapesEl = xmlDoc.createElementNS(diagramNs(root), 'ormDiagram:Shapes');
+        diagramEl.appendChild(shapesEl);
+        const subjectEl = xmlDoc.createElementNS(diagramNs(root), 'ormDiagram:Subject');
+        const ormModelId = ormModelEl.getAttribute('id');
+        if (ormModelId) subjectEl.setAttribute('ref', ormModelId);
+        diagramEl.appendChild(subjectEl);
+        root.appendChild(diagramEl);
+      }
+      return diagramEl;
+    }
+
+    function parseRefModesInput(value) {
+      return [...new Set(
+        String(value || '')
+          .split(/[\n,;|]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )];
+    }
+
+    function objectRefModesText(object) {
+      const refModes = Array.isArray(object?.refModes) ? object.refModes : parseRefModesInput(object?.refMode || '');
+      return refModes.join(', ');
+    }
+
+    function diagramRefModesText(object) {
+      const refModes = Array.isArray(object?.refModes) ? object.refModes : parseRefModesInput(object?.refMode || '');
+      return refModes.map((item) => item.startsWith('.') ? item : `.${item}`).join(', ');
+    }
+
+    function normalizeRefModeForNorma(refMode) {
+      return String(refMode || '').trim();
+    }
+
+    function capitalizeRefModeFragment(refMode) {
+      const raw = String(refMode || '').trim();
+      if (!raw) return '';
+      return raw.charAt(0).toUpperCase() + raw.slice(1);
+    }
+
+    function ensureDataTypeRefs(xmlDoc) {
+      const root = xmlDoc.documentElement;
+      const coreNamespace = coreNs(root);
+      const ormModelEl = findFirstByLocalName(xmlDoc, 'ORMModel');
+      let dataTypesEl = firstChildElement(ormModelEl, 'DataTypes');
+      if (!dataTypesEl) dataTypesEl = createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:DataTypes');
+
+      const definitions = [
+        ['UnspecifiedDataType', 'arena_unspecified_dt'],
+        ['FixedLengthTextDataType', 'arena_fixed_text_dt'],
+        ['SignedIntegerNumericDataType', 'arena_integer_dt'],
+        ['AutoCounterNumericDataType', 'arena_autocounter_dt']
+      ];
+      const refs = new Map();
+
+      definitions.forEach(([localName, id]) => {
+        let el = Array.from(dataTypesEl.getElementsByTagName('*')).find((item) => item.localName === localName && item.getAttribute('id') === id)
+          || Array.from(dataTypesEl.getElementsByTagName('*')).find((item) => item.localName === localName);
+        if (!el) {
+          el = xmlDoc.createElementNS(coreNamespace, `orm:${localName}`);
+          el.setAttribute('id', id);
+          dataTypesEl.appendChild(el);
+        }
+        refs.set(localName, el.getAttribute('id'));
+      });
+
+      return refs;
+    }
+
+    function syncObjectsToXml(xmlDoc, objectsSection, model) {
+      const coreNamespace = coreNs(xmlDoc.documentElement);
+      const dataTypeRefs = ensureDataTypeRefs(xmlDoc);
+      const objectIds = new Set(model.objects.map((object) => object.id));
+      const playedRolesByObject = new Map();
+      const preferredIdentifierByObject = new Map();
+      (model.facts || []).forEach((fact) => {
+        (fact.roles || []).forEach((role) => {
+          if (!role.playerRef) return;
+          const list = playedRolesByObject.get(role.playerRef) || [];
+          list.push(role.id || role.actualRoleId);
+          playedRolesByObject.set(role.playerRef, list);
+        });
+        (fact.uniquenessConstraints || []).forEach((constraint) => {
+          if (constraint.preferred && constraint.preferredForRef) {
+            preferredIdentifierByObject.set(constraint.preferredForRef, constraint.id);
+          }
+        });
+      });
+
+      elementChildren(objectsSection).forEach((child) => {
+        if (['EntityType', 'ValueType', 'ObjectifiedType'].includes(child.localName) && !objectIds.has(child.getAttribute('id'))) {
+          child.remove();
+        }
+      });
+
+      model.objects.forEach((object) => {
+        let objectEl = findXmlElementById(xmlDoc, object.id) || elementChildren(objectsSection).find((el) => el.getAttribute('id') === object.id);
+        if (!objectEl || objectEl.localName !== object.type) {
+          if (objectEl) objectEl.remove();
+          objectEl = xmlDoc.createElementNS(coreNamespace, `orm:${object.type}`);
+          objectEl.setAttribute('id', object.id);
+          objectsSection.appendChild(objectEl);
+        }
+        objectEl.setAttribute('Name', object.name || object.id);
+        objectEl.setAttribute('llm:DataType', object.dataType || 'UnspecifiedDataType');
+        const refModes = Array.isArray(object.refModes) ? object.refModes : parseRefModesInput(object.refMode || '');
+        object.refModes = refModes;
+        object.refMode = refModes[0] || '';
+        if (object.type !== 'ValueType') {
+          const exportedRefMode = normalizeRefModeForNorma(object.refMode || '');
+          if (exportedRefMode) {
+            objectEl.setAttribute('_ReferenceMode', exportedRefMode);
+            objectEl.setAttribute('llm:RefMode', exportedRefMode);
+            objectEl.setAttribute('llm:RefModes', refModes.join('|'));
+          } else {
+            objectEl.removeAttribute('_ReferenceMode');
+            objectEl.removeAttribute('llm:RefMode');
+            objectEl.removeAttribute('llm:RefModes');
+          }
+        }
+        if (object.independent) objectEl.setAttribute('IsIndependent', 'true');
+        else objectEl.removeAttribute('IsIndependent');
+
+        if (object.type === 'ValueType') {
+          let conceptualDataTypeEl = firstChildElement(objectEl, 'ConceptualDataType');
+          if (!conceptualDataTypeEl) {
+            conceptualDataTypeEl = createChildNS(xmlDoc, objectEl, coreNamespace, 'orm:ConceptualDataType');
+            conceptualDataTypeEl.setAttribute('id', `cdt_${object.id}`);
+          }
+          conceptualDataTypeEl.setAttribute('ref', dataTypeRefs.get(object.dataType || 'FixedLengthTextDataType') || dataTypeRefs.get('UnspecifiedDataType'));
+          if (!conceptualDataTypeEl.getAttribute('Scale')) conceptualDataTypeEl.setAttribute('Scale', '0');
+          if (!conceptualDataTypeEl.getAttribute('Length')) conceptualDataTypeEl.setAttribute('Length', '0');
+        }
+
+        let playedRolesEl = firstChildElement(objectEl, 'PlayedRoles');
+        if (!playedRolesEl) playedRolesEl = createChildNS(xmlDoc, objectEl, coreNamespace, 'orm:PlayedRoles');
+        while (playedRolesEl.firstChild) playedRolesEl.removeChild(playedRolesEl.firstChild);
+        (playedRolesByObject.get(object.id) || []).forEach((roleRef) => {
+          const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+          roleEl.setAttribute('ref', roleRef);
+          playedRolesEl.appendChild(roleEl);
+        });
+
+        const preferredConstraintId = preferredIdentifierByObject.get(object.id) || '';
+        let preferredIdentifierEl = firstChildElement(objectEl, 'PreferredIdentifier');
+        if (preferredConstraintId) {
+          if (!preferredIdentifierEl) preferredIdentifierEl = createChildNS(xmlDoc, objectEl, coreNamespace, 'orm:PreferredIdentifier');
+          preferredIdentifierEl.setAttribute('ref', preferredConstraintId);
+        } else if (preferredIdentifierEl) {
+          preferredIdentifierEl.remove();
+        }
+      });
+    }
+
+    function removeGeneratedReferenceArtifacts(objectsSection, factsSection, constraintsSection) {
+      elementChildren(objectsSection).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (isGeneratedReferenceValueTypeId(id)) child.remove();
+      });
+      elementChildren(factsSection).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (isGeneratedReferenceFactId(id)) child.remove();
+      });
+      elementChildren(constraintsSection).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (isGeneratedReferenceConstraintId(id)) child.remove();
+      });
+    }
+
+    function ensureReferenceModeKinds(xmlDoc) {
+      const root = xmlDoc.documentElement;
+      const coreNamespace = coreNs(root);
+      const ormModelEl = findFirstByLocalName(xmlDoc, 'ORMModel');
+      let section = firstChildElement(ormModelEl, 'ReferenceModeKinds');
+      if (!section) section = createChildNS(xmlDoc, ormModelEl, coreNamespace, 'orm:ReferenceModeKinds');
+      const defs = [
+        ['arena_refmode_general', '{1}', 'General'],
+        ['arena_refmode_popular', '{0}_{1}', 'Popular'],
+        ['arena_refmode_unit', '{1}Value', 'UnitBased']
+      ];
+      defs.forEach(([id, format, type]) => {
+        let el = Array.from(section.getElementsByTagName('*')).find((item) => item.localName === 'ReferenceModeKind' && item.getAttribute('id') === id);
+        if (!el) {
+          el = xmlDoc.createElementNS(coreNamespace, 'orm:ReferenceModeKind');
+          el.setAttribute('id', id);
+          section.appendChild(el);
+        }
+        el.setAttribute('FormatString', format);
+        el.setAttribute('ReferenceModeType', type);
+      });
+    }
+
+    function ensureDisplayState(xmlDoc, modelId) {
+      const root = xmlDoc.documentElement;
+      const coreNamespace = coreNs(root);
+      let displayStateEl = findFirstByLocalName(xmlDoc, 'DisplayState');
+      if (!displayStateEl) {
+        displayStateEl = xmlDoc.createElementNS(coreNamespace, 'orm:DisplayState');
+        displayStateEl.setAttribute('id', 'arena_display_state');
+        const diagramEl = findFirstByLocalName(xmlDoc, 'ORMDiagram');
+        if (diagramEl) root.insertBefore(displayStateEl, diagramEl);
+        else root.appendChild(displayStateEl);
+      }
+      let modelRefEl = firstChildElement(displayStateEl, 'ORMModel');
+      if (!modelRefEl) modelRefEl = createChildNS(xmlDoc, displayStateEl, coreNamespace, 'orm:ORMModel');
+      modelRefEl.setAttribute('ref', modelId);
+    }
+
+    function syncGeneratedEntityReferenceSchemes(xmlDoc, objectsSection, factsSection, constraintsSection, model) {
+      const coreNamespace = coreNs(xmlDoc.documentElement);
+      const dataTypeRefs = ensureDataTypeRefs(xmlDoc);
+      ensureReferenceModeKinds(xmlDoc);
+      ensureDisplayState(xmlDoc, findFirstByLocalName(xmlDoc, 'ORMModel')?.getAttribute('id') || 'model1');
+      removeGeneratedReferenceArtifacts(objectsSection, factsSection, constraintsSection);
+
+      (model.objects || []).forEach((object) => {
+        if (object.type !== 'EntityType') return;
+        const refMode = normalizeRefModeForNorma(object.refMode || '');
+        const refModeFactFragment = capitalizeRefModeFragment(refMode);
+        const dataTypeKey = String(object.dataType || 'FixedLengthTextDataType').trim() || 'FixedLengthTextDataType';
+        if (!refMode) return;
+
+        const refValueTypeId = `${object.id}__refvt`;
+        const refFactId = `${object.id}__reffact`;
+        const entityRoleId = `${object.id}__refrole_entity`;
+        const valueRoleId = `${object.id}__refrole_value`;
+        const preferredUcId = `${object.id}__refuc_pref`;
+        const otherUcId = `${object.id}__refuc_other`;
+        const mandatoryId = `${object.id}__refmandatory`;
+        const impliedMandatoryId = `${object.id}__refmandatory_implied`;
+        const readingOrderId1 = `${object.id}__refreadingorder1`;
+        const readingId1 = `${object.id}__refreading1`;
+        const readingOrderId2 = `${object.id}__refreadingorder2`;
+        const readingId2 = `${object.id}__refreading2`;
+        const refValueTypeName = `${object.name}_${refMode}`;
+
+        const valueTypeEl = xmlDoc.createElementNS(coreNamespace, 'orm:ValueType');
+        valueTypeEl.setAttribute('id', refValueTypeId);
+        valueTypeEl.setAttribute('Name', refValueTypeName);
+        const playedRolesEl = xmlDoc.createElementNS(coreNamespace, 'orm:PlayedRoles');
+        const playedRoleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        playedRoleEl.setAttribute('ref', valueRoleId);
+        playedRolesEl.appendChild(playedRoleEl);
+        valueTypeEl.appendChild(playedRolesEl);
+        const cdtEl = xmlDoc.createElementNS(coreNamespace, 'orm:ConceptualDataType');
+        cdtEl.setAttribute('id', `cdt_${refValueTypeId}`);
+        cdtEl.setAttribute('ref', dataTypeRefs.get(dataTypeKey) || dataTypeRefs.get('FixedLengthTextDataType') || dataTypeRefs.get('UnspecifiedDataType'));
+        cdtEl.setAttribute('Scale', '0');
+        cdtEl.setAttribute('Length', '0');
+        valueTypeEl.appendChild(cdtEl);
+        objectsSection.appendChild(valueTypeEl);
+
+        const objectEl = findXmlElementById(xmlDoc, object.id);
+        if (objectEl) {
+          let objectPlayedRolesEl = firstChildElement(objectEl, 'PlayedRoles');
+          if (!objectPlayedRolesEl) objectPlayedRolesEl = createChildNS(xmlDoc, objectEl, coreNamespace, 'orm:PlayedRoles');
+          const roleRefExists = Array.from(objectPlayedRolesEl.children || []).some((el) => el.getAttribute('ref') === entityRoleId);
+          if (!roleRefExists) {
+            const roleRefEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+            roleRefEl.setAttribute('ref', entityRoleId);
+            objectPlayedRolesEl.appendChild(roleRefEl);
+          }
+          let preferredIdentifierEl = firstChildElement(objectEl, 'PreferredIdentifier');
+          if (!preferredIdentifierEl) preferredIdentifierEl = createChildNS(xmlDoc, objectEl, coreNamespace, 'orm:PreferredIdentifier');
+          preferredIdentifierEl.setAttribute('ref', preferredUcId);
+        }
+
+        const factEl = xmlDoc.createElementNS(coreNamespace, 'orm:Fact');
+        factEl.setAttribute('id', refFactId);
+        factEl.setAttribute('_Name', `${object.name}Has${object.name}${refModeFactFragment}`);
+        const factRolesEl = xmlDoc.createElementNS(coreNamespace, 'orm:FactRoles');
+
+        const entityRoleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        entityRoleEl.setAttribute('id', entityRoleId);
+        entityRoleEl.setAttribute('Name', '');
+        entityRoleEl.setAttribute('IsMandatory', 'true');
+        entityRoleEl.setAttribute('Multiplicity', 'ZeroToOne');
+        const entityRolePlayerEl = xmlDoc.createElementNS(coreNamespace, 'orm:RolePlayer');
+        entityRolePlayerEl.setAttribute('ref', object.id);
+        entityRoleEl.appendChild(entityRolePlayerEl);
+        factRolesEl.appendChild(entityRoleEl);
+
+        const valueRoleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        valueRoleEl.setAttribute('id', valueRoleId);
+        valueRoleEl.setAttribute('Name', '');
+        valueRoleEl.setAttribute('IsMandatory', 'false');
+        valueRoleEl.setAttribute('Multiplicity', 'ExactlyOne');
+        const valueRolePlayerEl = xmlDoc.createElementNS(coreNamespace, 'orm:RolePlayer');
+        valueRolePlayerEl.setAttribute('ref', refValueTypeId);
+        valueRoleEl.appendChild(valueRolePlayerEl);
+        factRolesEl.appendChild(valueRoleEl);
+        factEl.appendChild(factRolesEl);
+
+        const readingOrdersEl = xmlDoc.createElementNS(coreNamespace, 'orm:ReadingOrders');
+        const createReadingOrder = (readingOrderId, readingId, dataText, roleRefs, followingText) => {
+          const readingOrderEl = xmlDoc.createElementNS(coreNamespace, 'orm:ReadingOrder');
+          readingOrderEl.setAttribute('id', readingOrderId);
+          const readingsEl = xmlDoc.createElementNS(coreNamespace, 'orm:Readings');
+          const readingEl = xmlDoc.createElementNS(coreNamespace, 'orm:Reading');
+          readingEl.setAttribute('id', readingId);
+          const dataEl = xmlDoc.createElementNS(coreNamespace, 'orm:Data');
+          dataEl.textContent = dataText;
+          readingEl.appendChild(dataEl);
+          const expandedDataEl = xmlDoc.createElementNS(coreNamespace, 'orm:ExpandedData');
+          const roleTextEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleText');
+          roleTextEl.setAttribute('RoleIndex', '0');
+          roleTextEl.setAttribute('FollowingText', followingText);
+          expandedDataEl.appendChild(roleTextEl);
+          readingEl.appendChild(expandedDataEl);
+          readingsEl.appendChild(readingEl);
+          readingOrderEl.appendChild(readingsEl);
+          const roleSequenceEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+          roleRefs.forEach((roleRef) => {
+            const seqRole = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+            seqRole.setAttribute('ref', roleRef);
+            roleSequenceEl.appendChild(seqRole);
+          });
+          readingOrderEl.appendChild(roleSequenceEl);
+          return readingOrderEl;
+        };
+        readingOrdersEl.appendChild(createReadingOrder(readingOrderId1, readingId1, '{0} has {1}', [entityRoleId, valueRoleId], ' has '));
+        readingOrdersEl.appendChild(createReadingOrder(readingOrderId2, readingId2, '{0} is of {1}', [valueRoleId, entityRoleId], ' is of '));
+        factEl.appendChild(readingOrdersEl);
+
+        const internalConstraintsEl = xmlDoc.createElementNS(coreNamespace, 'orm:InternalConstraints');
+        [preferredUcId, otherUcId, mandatoryId].forEach((refId) => {
+          const refEl = xmlDoc.createElementNS(coreNamespace, refId === mandatoryId ? 'orm:MandatoryConstraint' : 'orm:UniquenessConstraint');
+          refEl.setAttribute('ref', refId);
+          internalConstraintsEl.appendChild(refEl);
+        });
+        factEl.appendChild(internalConstraintsEl);
+        factsSection.appendChild(factEl);
+
+        const createUniquenessConstraint = (id, name, roleRef, preferredFor = '') => {
+          const ucEl = xmlDoc.createElementNS(coreNamespace, 'orm:UniquenessConstraint');
+          ucEl.setAttribute('id', id);
+          ucEl.setAttribute('Name', name);
+          ucEl.setAttribute('IsInternal', 'true');
+          const roleSequenceEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+          const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+          roleEl.setAttribute('id', `${id}__rs`);
+          roleEl.setAttribute('ref', roleRef);
+          roleSequenceEl.appendChild(roleEl);
+          ucEl.appendChild(roleSequenceEl);
+          if (preferredFor) {
+            const preferredForEl = xmlDoc.createElementNS(coreNamespace, 'orm:PreferredIdentifierFor');
+            preferredForEl.setAttribute('ref', preferredFor);
+            ucEl.appendChild(preferredForEl);
+          }
+          return ucEl;
+        };
+        constraintsSection.appendChild(createUniquenessConstraint(preferredUcId, 'InternalUniquenessConstraint1', valueRoleId, object.id));
+        constraintsSection.appendChild(createUniquenessConstraint(otherUcId, 'InternalUniquenessConstraint2', entityRoleId));
+
+        const mandatoryEl = xmlDoc.createElementNS(coreNamespace, 'orm:MandatoryConstraint');
+        mandatoryEl.setAttribute('id', mandatoryId);
+        mandatoryEl.setAttribute('Name', 'SimpleMandatoryConstraint1');
+        mandatoryEl.setAttribute('IsSimple', 'true');
+        const mandatoryRoleSeqEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+        const mandatoryRoleRefEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        mandatoryRoleRefEl.setAttribute('id', `${mandatoryId}__rs`);
+        mandatoryRoleRefEl.setAttribute('ref', entityRoleId);
+        mandatoryRoleSeqEl.appendChild(mandatoryRoleRefEl);
+        mandatoryEl.appendChild(mandatoryRoleSeqEl);
+        constraintsSection.appendChild(mandatoryEl);
+
+        const impliedMandatoryEl = xmlDoc.createElementNS(coreNamespace, 'orm:MandatoryConstraint');
+        impliedMandatoryEl.setAttribute('id', impliedMandatoryId);
+        impliedMandatoryEl.setAttribute('Name', 'ImpliedMandatoryConstraint1');
+        impliedMandatoryEl.setAttribute('IsImplied', 'true');
+        const impliedRoleSeqEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+        const impliedRoleRefEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        impliedRoleRefEl.setAttribute('id', `${impliedMandatoryId}__rs`);
+        impliedRoleRefEl.setAttribute('ref', valueRoleId);
+        impliedRoleSeqEl.appendChild(impliedRoleRefEl);
+        impliedMandatoryEl.appendChild(impliedRoleSeqEl);
+        const impliedByObjectEl = xmlDoc.createElementNS(coreNamespace, 'orm:ImpliedByObjectType');
+        impliedByObjectEl.setAttribute('ref', refValueTypeId);
+        impliedMandatoryEl.appendChild(impliedByObjectEl);
+        constraintsSection.appendChild(impliedMandatoryEl);
+      });
+    }
+
+    function syncFactsToXml(xmlDoc, factsSection, model) {
+      const coreNamespace = coreNs(xmlDoc.documentElement);
+      const factIds = new Set(model.facts.map((fact) => fact.id));
+      elementChildren(factsSection).forEach((child) => {
+        if (['Fact', 'ImpliedFact'].includes(child.localName) && !factIds.has(child.getAttribute('id'))) {
+          child.remove();
+        }
+      });
+
+      model.facts.forEach((fact) => {
+        let factEl = findXmlElementById(xmlDoc, fact.id) || elementChildren(factsSection).find((el) => el.getAttribute('id') === fact.id);
+        if (!factEl || !['Fact', 'ImpliedFact'].includes(factEl.localName)) {
+          factEl = xmlDoc.createElementNS(coreNamespace, `orm:${fact.type || 'Fact'}`);
+          factEl.setAttribute('id', fact.id);
+          factsSection.appendChild(factEl);
+        }
+        factEl.setAttribute('_Name', fact.name || fact.id);
+
+        let factRolesEl = firstChildElement(factEl, 'FactRoles');
+        if (!factRolesEl) factRolesEl = createChildNS(xmlDoc, factEl, coreNamespace, 'orm:FactRoles');
+        while (factRolesEl.firstChild) factRolesEl.removeChild(factRolesEl.firstChild);
+        (fact.roles || []).forEach((role) => {
+          const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+          roleEl.setAttribute('id', role.id);
+          roleEl.setAttribute('Name', role.name || '');
+          roleEl.setAttribute('IsMandatory', (role.IsMandatory ?? role.mandatory) ? 'true' : 'false');
+          roleEl.setAttribute('Multiplicity', role.Multiplicity || role.multiplicity || 'Unspecified');
+          const rolePlayerEl = xmlDoc.createElementNS(coreNamespace, 'orm:RolePlayer');
+          rolePlayerEl.setAttribute('ref', role.playerRef);
+          roleEl.appendChild(rolePlayerEl);
+          factRolesEl.appendChild(roleEl);
+        });
+
+        let readingOrdersEl = firstChildElement(factEl, 'ReadingOrders');
+        if (!readingOrdersEl) readingOrdersEl = createChildNS(xmlDoc, factEl, coreNamespace, 'orm:ReadingOrders');
+        while (readingOrdersEl.firstChild) readingOrdersEl.removeChild(readingOrdersEl.firstChild);
+        (fact.readings || []).forEach((readingOrder) => {
+          const roEl = xmlDoc.createElementNS(coreNamespace, 'orm:ReadingOrder');
+          roEl.setAttribute('id', readingOrder.id);
+          const readingsEl = xmlDoc.createElementNS(coreNamespace, 'orm:Readings');
+          (readingOrder.readings || []).forEach((reading) => {
+            const readingEl = xmlDoc.createElementNS(coreNamespace, 'orm:Reading');
+            readingEl.setAttribute('id', reading.id);
+            const dataEl = xmlDoc.createElementNS(coreNamespace, 'orm:Data');
+            dataEl.textContent = reading.template || '';
+            readingEl.appendChild(dataEl);
+            readingsEl.appendChild(readingEl);
+          });
+          roEl.appendChild(readingsEl);
+          const roleSequenceEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+          (readingOrder.roleSequence || []).forEach((roleRef) => {
+            const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+            roleEl.setAttribute('ref', roleRef);
+            roleSequenceEl.appendChild(roleEl);
+          });
+          roEl.appendChild(roleSequenceEl);
+          readingOrdersEl.appendChild(roEl);
+        });
+      });
+    }
+
+    function writeDiagramState(xmlDoc, diagramEl, model) {
+      const shapesEl = firstChildElement(diagramEl, 'Shapes') || createChildNS(xmlDoc, diagramEl, diagramNs(xmlDoc.documentElement), 'ormDiagram:Shapes');
+      const diagramNamespace = diagramNs(xmlDoc.documentElement);
+
+      syncShapeCollection(xmlDoc, shapesEl, model.diagram.objectShapes || [], 'ObjectTypeShape', diagramNamespace, model);
+      syncShapeCollection(xmlDoc, shapesEl, model.diagram.factShapes || [], 'FactTypeShape', diagramNamespace, model);
+      syncReadingShapes(xmlDoc, shapesEl, model.diagram.readingShapes || [], diagramNamespace);
+      cleanupEmptyRelativeShapes(shapesEl);
+    }
+
+    function syncShapeCollection(xmlDoc, shapesEl, shapes, localName, ns, model) {
+      const keepIds = new Set(shapes.map((shape) => shape.id).filter(Boolean));
+      const keepSubjects = new Set(shapes.map((shape) => shape.subjectRef).filter(Boolean));
+
+      Array.from(shapesEl.children || [])
+        .filter((el) => el.localName === localName)
+        .forEach((shapeEl) => {
+          const subjectRef = firstChildElement(shapeEl, 'Subject')?.getAttribute('ref') || '';
+          const id = shapeEl.getAttribute('id') || '';
+          if (!keepIds.has(id) && !keepSubjects.has(subjectRef)) {
+            shapeEl.remove();
+          }
+        });
+
+      shapes.forEach((shape) => {
+        let shapeEl = shape.id ? findXmlElementById(xmlDoc, shape.id) : null;
+        if (!shapeEl || shapeEl.localName !== localName) {
+          shapeEl = Array.from(shapesEl.children || []).find((el) => el.localName === localName && firstChildElement(el, 'Subject')?.getAttribute('ref') === shape.subjectRef);
+        }
+        if (!shapeEl) {
+          shapeEl = xmlDoc.createElementNS(ns, `ormDiagram:${localName}`);
+          shapeEl.setAttribute('id', shape.id || `arena_${localName}_${shape.subjectRef}`);
+          const subjectEl = xmlDoc.createElementNS(ns, 'ormDiagram:Subject');
+          subjectEl.setAttribute('ref', shape.subjectRef);
+          shapeEl.appendChild(subjectEl);
+          shapesEl.appendChild(shapeEl);
+        }
+        shapeEl.setAttribute('id', shape.id || shapeEl.getAttribute('id') || `arena_${localName}_${shape.subjectRef}`);
+        const subjectEl = firstChildElement(shapeEl, 'Subject') || createChildNS(xmlDoc, shapeEl, ns, 'ormDiagram:Subject');
+        subjectEl.setAttribute('ref', shape.subjectRef);
+        shapeEl.setAttribute('AbsoluteBounds', formatBounds(shape.bounds));
+        if (localName === 'ObjectTypeShape') {
+          shapeEl.setAttribute('IsExpanded', 'true');
+          shapeEl.removeAttribute('ExpandRefMode');
+        }
+        if (localName === 'FactTypeShape') {
+          shapeEl.setAttribute('IsExpanded', 'true');
+        }
+      });
+    }
+
+    function syncReadingShapes(xmlDoc, shapesEl, readingShapes, ns) {
+      const factTypeShapes = Array.from(shapesEl.children || []).filter((el) => el.localName === 'FactTypeShape');
+      const keepIds = new Set(readingShapes.map((shape) => shape.id).filter(Boolean));
+      const keepSubjects = new Set(readingShapes.map((shape) => shape.subjectRef).filter(Boolean));
+
+      Array.from(shapesEl.getElementsByTagName('*'))
+        .filter((el) => el.localName === 'ReadingShape')
+        .forEach((readingEl) => {
+          const subjectRef = firstChildElement(readingEl, 'Subject')?.getAttribute('ref') || '';
+          const id = readingEl.getAttribute('id') || '';
+          if (!keepIds.has(id) && !keepSubjects.has(subjectRef)) {
+            readingEl.remove();
+          }
+        });
+
+      readingShapes.forEach((shape) => {
+        let readingEl = shape.id ? findXmlElementById(xmlDoc, shape.id) : null;
+        if (!readingEl || readingEl.localName !== 'ReadingShape') {
+          readingEl = Array.from(shapesEl.getElementsByTagName('*')).find((el) => el.localName === 'ReadingShape' && firstChildElement(el, 'Subject')?.getAttribute('ref') === shape.subjectRef);
+        }
+        if (!readingEl) {
+          const factShape = factTypeShapes.find((candidate) => candidate.getAttribute('id') === shape.parentFactShapeId)
+            || factTypeShapes.find((candidate) => firstChildElement(candidate, 'Subject')?.getAttribute('ref') === shape.factId)
+            || factTypeShapes[0];
+          if (!factShape) return;
+          const relativeShapesEl = firstChildElement(factShape, 'RelativeShapes') || createChildNS(xmlDoc, factShape, ns, 'ormDiagram:RelativeShapes');
+          readingEl = xmlDoc.createElementNS(ns, 'ormDiagram:ReadingShape');
+          readingEl.setAttribute('id', shape.id || `arena_ReadingShape_${shape.subjectRef}`);
+          const subjectEl = xmlDoc.createElementNS(ns, 'ormDiagram:Subject');
+          subjectEl.setAttribute('ref', shape.subjectRef);
+          readingEl.appendChild(subjectEl);
+          relativeShapesEl.appendChild(readingEl);
+        }
+        readingEl.setAttribute('id', shape.id || readingEl.getAttribute('id') || `arena_ReadingShape_${shape.subjectRef}`);
+        const subjectEl = firstChildElement(readingEl, 'Subject') || createChildNS(xmlDoc, readingEl, ns, 'ormDiagram:Subject');
+        subjectEl.setAttribute('ref', shape.subjectRef);
+        readingEl.setAttribute('AbsoluteBounds', formatBounds(shape.bounds));
+      });
+    }
+
+    function cleanupEmptyRelativeShapes(shapesEl) {
+      Array.from(shapesEl.getElementsByTagName('*'))
+        .filter((el) => el.localName === 'RelativeShapes')
+        .forEach((relativeShapesEl) => {
+          const hasReadingShape = Array.from(relativeShapesEl.children || []).some((child) => child.localName === 'ReadingShape');
+          if (!hasReadingShape) relativeShapesEl.remove();
+        });
+    }
+
+    function syncConstraintsToXml(xmlDoc, constraintsSection, factsSection, model) {
+      const root = xmlDoc.documentElement;
+      const coreNamespace = coreNs(root);
+
+      removeArenaConstraintArtifacts(constraintsSection, factsSection, model);
+      removeInternalUniquenessArtifacts(constraintsSection, factsSection);
+
+      for (const fact of model.facts) {
+        const factEl = findXmlElementById(xmlDoc, fact.id) || Array.from(factsSection.getElementsByTagName('*')).find((el) => el.localName === fact.type && el.getAttribute('id') === fact.id);
+        if (!factEl) continue;
+
+        const internalConstraintsEl = firstChildElement(factEl, 'InternalConstraints') || createChildNS(xmlDoc, factEl, coreNamespace, 'orm:InternalConstraints');
+        (fact.uniquenessConstraints || []).forEach((constraint) => {
+          const constraintEl = createInternalUniquenessConstraintElement(xmlDoc, coreNamespace, constraint);
+          constraintsSection.appendChild(constraintEl);
+          const refEl = xmlDoc.createElementNS(coreNamespace, 'orm:UniquenessConstraint');
+          refEl.setAttribute('ref', constraint.id);
+          internalConstraintsEl.appendChild(refEl);
+        });
+      }
+
+      for (const constraint of model.externalConstraints || []) {
+        if (!constraint.userCreated) continue;
+        if (constraint.renderKind === 'XorConstraint') {
+          constraintsSection.appendChild(createConstraintElement(xmlDoc, coreNamespace, {
+            ...constraint,
+            id: `${constraint.id}__mand`,
+            type: 'MandatoryConstraint',
+            renderKind: 'ExternalMandatory'
+          }));
+          constraintsSection.appendChild(createConstraintElement(xmlDoc, coreNamespace, {
+            ...constraint,
+            id: `${constraint.id}__excl`,
+            type: 'ExclusionConstraint',
+            renderKind: 'ExclusionConstraint'
+          }));
+          continue;
+        }
+        const constraintEl = createConstraintElement(xmlDoc, coreNamespace, constraint);
+        constraintsSection.appendChild(constraintEl);
+      }
+    }
+
+    function syncLlmDigest(xmlDoc, root, model) {
+      const llmNs = root.lookupNamespaceURI('llm') || 'urn:arena:orm2-llm';
+      let digestEl = Array.from(root.children || []).find((child) => child.localName === 'ModelDigest' && child.namespaceURI === llmNs);
+      if (!digestEl) {
+        digestEl = xmlDoc.createElementNS(llmNs, 'llm:ModelDigest');
+        root.appendChild(digestEl);
+      }
+      while (digestEl.firstChild) digestEl.removeChild(digestEl.firstChild);
+      digestEl.setAttribute('version', '1');
+      digestEl.setAttribute('modelRef', model.xmlDoc ? (findFirstByLocalName(model.xmlDoc, 'ORMModel')?.getAttribute('id') || model.name || 'model') : (findFirstByLocalName(xmlDoc, 'ORMModel')?.getAttribute('id') || 'model'));
+      digestEl.setAttribute('purpose', 'Stable, compact semantic digest for LLM parsing');
+
+      const appendList = (name, items, builder) => {
+        const section = xmlDoc.createElementNS(llmNs, `llm:${name}`);
+        items.forEach((item) => section.appendChild(builder(item)));
+        digestEl.appendChild(section);
+      };
+
+      appendList('Objects', model.objects || [], (object) => {
+        const el = xmlDoc.createElementNS(llmNs, 'llm:Object');
+        el.setAttribute('objectRef', object.id);
+        el.setAttribute('type', object.type);
+        el.setAttribute('name', object.name || '');
+        const refModes = Array.isArray(object.refModes) ? object.refModes : parseRefModesInput(object.refMode || '');
+        if (refModes.length) {
+          el.setAttribute('refMode', refModes[0]);
+          el.setAttribute('refModes', refModes.join('|'));
+        }
+        if (object.dataType) el.setAttribute('dataType', object.dataType);
+        if (object.independent) el.setAttribute('independent', 'true');
+        return el;
+      });
+
+      appendList('Facts', model.facts || [], (fact) => {
+        const el = xmlDoc.createElementNS(llmNs, 'llm:Fact');
+        el.setAttribute('factRef', fact.id);
+        el.setAttribute('type', fact.type || 'Fact');
+        el.setAttribute('name', fact.name || '');
+        const firstReading = fact.readings?.[0]?.readings?.[0]?.template || '';
+        if (firstReading) el.setAttribute('reading', firstReading);
+        (fact.roles || []).forEach((role) => {
+          const roleEl = xmlDoc.createElementNS(llmNs, 'llm:Role');
+          roleEl.setAttribute('roleRef', role.id || role.actualRoleId || '');
+          roleEl.setAttribute('playerRef', role.playerRef || '');
+          roleEl.setAttribute('playerName', role.playerName || '');
+          roleEl.setAttribute('name', role.name || '');
+          roleEl.setAttribute('mandatory', String(!!(role.IsMandatory || role.mandatory)));
+          roleEl.setAttribute('multiplicity', role.Multiplicity || role.multiplicity || 'Unspecified');
+          el.appendChild(roleEl);
+        });
+        return el;
+      });
+
+      const allConstraints = [];
+      (model.facts || []).forEach((fact) => {
+        (fact.uniquenessConstraints || []).forEach((constraint) => {
+          allConstraints.push({ ...constraint, source: 'internal', factId: fact.id });
+        });
+      });
+      (model.externalConstraints || []).forEach((constraint) => allConstraints.push({ ...constraint, source: 'external' }));
+      appendList('Constraints', allConstraints, (constraint) => {
+        const el = xmlDoc.createElementNS(llmNs, 'llm:Constraint');
+        el.setAttribute('constraintRef', constraint.id);
+        el.setAttribute('type', constraint.renderKind || constraint.type || 'Constraint');
+        el.setAttribute('source', constraint.source || 'external');
+        if (constraint.factId) el.setAttribute('factRef', constraint.factId);
+        if (constraint.name) el.setAttribute('name', constraint.name);
+        if (constraint.roleRefs?.length) el.setAttribute('roleRefs', constraint.roleRefs.join(','));
+        if (constraint.preferred) el.setAttribute('preferred', 'true');
+        if (constraint.preferredForRef) el.setAttribute('preferredForRef', constraint.preferredForRef);
+        if (constraint.minFrequency !== '' && constraint.minFrequency !== undefined) el.setAttribute('minFrequency', String(constraint.minFrequency));
+        if (constraint.maxFrequency !== '' && constraint.maxFrequency !== undefined) el.setAttribute('maxFrequency', String(constraint.maxFrequency));
+        return el;
+      });
+
+      appendList('Diagram', [
+        ...(model.diagram.objectShapes || []).map((shape) => ({ kind: 'ObjectTypeShape', ...shape })),
+        ...(model.diagram.factShapes || []).map((shape) => ({ kind: 'FactTypeShape', ...shape })),
+        ...(model.diagram.readingShapes || []).map((shape) => ({ kind: 'ReadingShape', ...shape }))
+      ], (shape) => {
+        const el = xmlDoc.createElementNS(llmNs, 'llm:Shape');
+        el.setAttribute('kind', shape.kind);
+        el.setAttribute('shapeRef', shape.id || '');
+        el.setAttribute('subjectRef', shape.subjectRef || '');
+        if (shape.factId) el.setAttribute('factRef', shape.factId);
+        if (shape.bounds) {
+          el.setAttribute('x', String(shape.bounds.x));
+          el.setAttribute('y', String(shape.bounds.y));
+          el.setAttribute('w', String(shape.bounds.w));
+          el.setAttribute('h', String(shape.bounds.h));
+        }
+        return el;
+      });
+    }
+
+    function removeInternalUniquenessArtifacts(constraintsSection, factsSection) {
+      Array.from(constraintsSection.children || []).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (child.localName === 'UniquenessConstraint' && child.getAttribute('IsInternal') === 'true' && !isGeneratedReferenceConstraintId(id)) {
+          child.remove();
+        }
+      });
+
+      Array.from(factsSection.getElementsByTagName('*')).forEach((factEl) => {
+        if (!['Fact', 'ImpliedFact'].includes(factEl.localName)) return;
+        const internalConstraintsEl = firstChildElement(factEl, 'InternalConstraints');
+        if (!internalConstraintsEl) return;
+        Array.from(internalConstraintsEl.children || []).forEach((child) => {
+          const ref = child.getAttribute('ref') || '';
+          if (child.localName === 'UniquenessConstraint' && !isGeneratedReferenceConstraintId(ref)) child.remove();
+        });
+      });
+    }
+
+    function createInternalUniquenessConstraintElement(xmlDoc, coreNamespace, constraint) {
+      const constraintEl = xmlDoc.createElementNS(coreNamespace, 'orm:UniquenessConstraint');
+      constraintEl.setAttribute('id', constraint.id);
+      constraintEl.setAttribute('Name', constraint.name || 'InternalUniquenessConstraint');
+      constraintEl.setAttribute('IsInternal', 'true');
+      if (constraint.preferred && constraint.preferredForRef) {
+        const preferredEl = xmlDoc.createElementNS(coreNamespace, 'orm:PreferredIdentifierFor');
+        preferredEl.setAttribute('ref', constraint.preferredForRef);
+        constraintEl.appendChild(preferredEl);
+      }
+      const roleSequenceEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+      (constraint.roleRefs || []).forEach((roleRef) => {
+        const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        roleEl.setAttribute('ref', roleRef);
+        roleSequenceEl.appendChild(roleEl);
+      });
+      constraintEl.insertBefore(roleSequenceEl, constraintEl.firstChild || null);
+      return constraintEl;
+    }
+
+    function removeArenaConstraintArtifacts(constraintsSection, factsSection, model) {
+      const externalIdsToReplace = new Set();
+      (model.externalConstraints || []).forEach((constraint) => {
+        externalIdsToReplace.add(constraint.id);
+        if (constraint.renderKind === 'XorConstraint') {
+          externalIdsToReplace.add(`${constraint.id}__mand`);
+          externalIdsToReplace.add(`${constraint.id}__excl`);
+        }
+      });
+
+      Array.from(constraintsSection.children || []).forEach((child) => {
+        const id = child.getAttribute('id') || '';
+        if (getEditorMetaAttr(child, 'UserCreated') === 'true' || externalIdsToReplace.has(id)) {
+          child.remove();
+        }
+      });
+
+      Array.from(factsSection.getElementsByTagName('*')).forEach((factEl) => {
+        if (!['Fact', 'ImpliedFact'].includes(factEl.localName)) return;
+        const internalConstraintsEl = firstChildElement(factEl, 'InternalConstraints');
+        if (!internalConstraintsEl) return;
+        Array.from(internalConstraintsEl.children || []).forEach((child) => {
+          const ref = child.getAttribute('ref');
+          if (ref && ref.startsWith('intuc_')) child.remove();
+        });
+      });
+    }
+
+    function createConstraintElement(xmlDoc, coreNamespace, constraint) {
+      const qName = `orm:${constraint.type === 'XorConstraint' ? 'MandatoryConstraint' : constraint.type}`;
+      const constraintEl = xmlDoc.createElementNS(coreNamespace, qName);
+      constraintEl.setAttribute('id', constraint.id);
+      constraintEl.setAttribute('Name', constraint.name || constraint.type);
+      if (constraint.isInternal) constraintEl.setAttribute('IsInternal', 'true');
+      if (constraint.isSimple) constraintEl.setAttribute('IsSimple', 'true');
+      if (constraint.renderKind === 'FrequencyConstraint') {
+        if (constraint.minFrequency !== '') {
+          constraintEl.setAttribute('MinFrequency', constraint.minFrequency);
+        }
+        if (constraint.maxFrequency !== '') {
+          constraintEl.setAttribute('MaxFrequency', constraint.maxFrequency);
+        }
+      }
+      if (constraint.renderKind === 'ExternalMandatory' || constraint.renderKind === 'XorConstraint') {
+        constraintEl.setAttribute('IsSimple', 'false');
+      }
+
+      const roleSequenceEl = xmlDoc.createElementNS(coreNamespace, 'orm:RoleSequence');
+      (constraint.roleRefs || []).forEach((roleRef) => {
+        const roleEl = xmlDoc.createElementNS(coreNamespace, 'orm:Role');
+        roleEl.setAttribute('ref', roleRef);
+        roleSequenceEl.appendChild(roleEl);
+      });
+      constraintEl.appendChild(roleSequenceEl);
+
+      if (constraint.type === 'UniquenessConstraint' && constraint.preferred && constraint.preferredForRef) {
+        const preferredEl = xmlDoc.createElementNS(coreNamespace, 'orm:PreferredIdentifierFor');
+        preferredEl.setAttribute('ref', constraint.preferredForRef);
+        constraintEl.appendChild(preferredEl);
+      }
+
+      if (constraint.renderKind === 'XorConstraint') {
+        constraintEl.setAttribute('arena:OverlayExclusion', 'true');
+      }
+
+      return constraintEl;
+    }
+
+    function formatBounds(bounds) {
+      return [bounds.x, bounds.y, bounds.w, bounds.h].map((value) => Number(value).toFixed(6)).join(', ');
+    }
+
+    function getSelectedConstraintEntry() {
+      if (!state.model || !state.selectedConstraintId) return null;
+      const external = (state.model.externalConstraints || []).find((constraint) => constraint.id === state.selectedConstraintId);
+      if (external) return { constraint: external, source: 'external', fact: null };
+      for (const fact of state.model.facts || []) {
+        const internal = (fact.uniquenessConstraints || []).find((constraint) => constraint.id === state.selectedConstraintId);
+        if (internal) return { constraint: internal, source: 'internal', fact };
+      }
+      return null;
+    }
+
+    function focusConstraintOnDiagram(constraintId) {
+      const entry = getConstraintEntryById(constraintId);
+      const point = entry?.constraint?.renderCenter || entry?.constraint?.editorPosition || null;
+      if (!point) return;
+      scrollDiagramToPoint(point.x, point.y);
+    }
+
+    function focusRoleOnDiagram(roleRef) {
+      const role = state.model?.roleMeta.get(roleRef);
+      const point = role?.renderFocusPoint;
+      if (!point) return;
+      scrollDiagramToPoint(point.x, point.y);
+    }
+
+    function scrollDiagramToPoint(x, y, options = {}) {
+      const zoomFactor = state.zoom || 1;
+      const targetLeft = Math.max(0, x * zoomFactor - elements.diagramViewport.clientWidth / 2);
+      const targetTop = Math.max(0, y * zoomFactor - elements.diagramViewport.clientHeight / 2);
+      if (options.smooth && typeof elements.diagramViewport.scrollTo === 'function') {
+        elements.diagramViewport.scrollTo({ left: targetLeft, top: targetTop, behavior: 'smooth' });
+        return;
+      }
+      elements.diagramViewport.scrollLeft = targetLeft;
+      elements.diagramViewport.scrollTop = targetTop;
+    }
+
+    function getSelectedConstraint() {
+      return getSelectedConstraintEntry()?.constraint || null;
+    }
+
+    function selectConstraint(constraintId) {
+      clearBusinessRuleFocus();
+      state.selectedConstraintId = constraintId;
+      state.selectedElement = null;
+      state.multiSelectedElements = [];
+      state.selectedRoleRefs = [];
+      state.selectionBreaks = [];
+      if (state.model) {
+        renderModel(state.model);
+      } else {
+        renderConstraintEditorState();
+        applySearchState();
+      }
+    }
+
+    function togglePreferredUniqueness(constraintId) {
+      const entry = constraintId ? getConstraintEntryById(constraintId) : getSelectedConstraintEntry();
+      if (!entry || entry.constraint.type !== 'UniquenessConstraint') {
+        setStatus('Выберите uniqueness constraint.', true);
+        return;
+      }
+      pushHistorySnapshot();
+      entry.constraint.preferred = !entry.constraint.preferred;
+      if (!entry.constraint.preferred) {
+        entry.constraint.preferredForRef = '';
+      } else if (!entry.constraint.preferredForRef) {
+        entry.constraint.preferredForRef = guessPreferredTargetRef(entry);
+      }
+      state.selectedConstraintId = entry.constraint.id;
+      renderModel(state.model);
+      setStatus(entry.constraint.preferred ? 'Preferred uniqueness включён.' : 'Preferred uniqueness выключён.');
+    }
+
+    function choosePreferredTargetForConstraint(constraintId) {
+      const entry = constraintId ? getConstraintEntryById(constraintId) : getSelectedConstraintEntry();
+      if (!entry || entry.constraint.type !== 'UniquenessConstraint') {
+        setStatus('Выберите uniqueness constraint.', true);
+        return;
+      }
+      if (entry.source !== 'internal' || !entry.fact) {
+        setStatus('PreferredFor выбирается только для internal uniqueness выбранного факта.', true);
+        return;
+      }
+      const candidates = getPreferredTargetCandidates(entry.fact);
+      if (!candidates.length) {
+        setStatus('Для этого факта нет объектов-кандидатов.', true);
+        return;
+      }
+      const current = entry.constraint.preferredForRef || '';
+      const promptText = candidates.map((candidate, index) => `${index + 1}. ${candidate.label}${candidate.ref === current ? ' [текущий]' : ''}`).join('\n');
+      const answer = prompt(`Выберите номер объекта для PreferredIdentifierFor:\n${promptText}`, current ? String(candidates.findIndex((candidate) => candidate.ref === current) + 1) : '1');
+      if (answer === null) return;
+      const index = Number(answer) - 1;
+      if (!Number.isInteger(index) || index < 0 || index >= candidates.length) {
+        setStatus('Некорректный номер объекта для PreferredFor.', true);
+        return;
+      }
+      pushHistorySnapshot();
+      entry.constraint.preferred = true;
+      entry.constraint.preferredForRef = candidates[index].ref;
+      state.selectedConstraintId = entry.constraint.id;
+      renderModel(state.model);
+      setStatus(`PreferredFor установлен: ${candidates[index].label}.`);
+    }
+
+    function getConstraintEntryById(constraintId) {
+      if (!constraintId || !state.model) return null;
+      const external = (state.model.externalConstraints || []).find((constraint) => constraint.id === constraintId);
+      if (external) return { constraint: external, source: 'external', fact: null };
+      for (const fact of state.model.facts || []) {
+        const internal = (fact.uniquenessConstraints || []).find((constraint) => constraint.id === constraintId);
+        if (internal) return { constraint: internal, source: 'internal', fact };
+      }
+      return null;
+    }
+
+    function guessPreferredTargetRef(entry) {
+      if (!entry) return '';
+      if (entry.fact) {
+        const roleRefs = new Set(entry.constraint.roleRefs || []);
+        const matchingRoles = (entry.fact.roles || []).filter((role) => roleRefs.has(role.id) || roleRefs.has(role.actualRoleId));
+        return matchingRoles[0]?.playerRef || getPreferredTargetCandidates(entry.fact)[0]?.ref || '';
+      }
+      const externalCandidates = [...new Set((entry.constraint.roleRefs || []).map((roleRef) => state.model.roleMeta.get(roleRef)?.playerRef).filter(Boolean))];
+      return externalCandidates[0] || '';
+    }
+
+    function getPreferredTargetCandidates(fact) {
+      return [...new Set((fact.roles || []).map((role) => role.playerRef).filter(Boolean))]
+        .map((objectRef) => ({ ref: objectRef, label: state.model.objectById.get(objectRef)?.name || objectRef }));
+    }
+
+    function applySelectedConstraintEdits() {
+      const entry = getSelectedConstraintEntry();
+      const constraint = entry?.constraint;
+      if (!constraint) {
+        setStatus('Сначала выберите ограничение.', true);
+        return;
+      }
+
+      pushHistorySnapshot();
+      const propNameEl = document.getElementById('propConstraintName');
+      const propPreferredEl = document.getElementById('propConstraintPreferred');
+      const propPreferredForEl = document.getElementById('propConstraintPreferredFor');
+      const propMinEl = document.getElementById('propConstraintMin');
+      const propMaxEl = document.getElementById('propConstraintMax');
+
+      constraint.name = (propNameEl?.value ?? elements.constraintNameInput.value).trim() || constraint.name;
+      constraint.preferred = propPreferredEl ? propPreferredEl.checked : elements.preferredConstraintChk.checked;
+      if (propPreferredForEl) {
+        constraint.preferredForRef = propPreferredForEl.value || '';
+      }
+      if (!constraint.preferred) {
+        constraint.preferredForRef = '';
+      } else if (!constraint.preferredForRef) {
+        constraint.preferredForRef = guessPreferredTargetRef(entry);
+      }
+      if (constraint.renderKind === 'FrequencyConstraint') {
+        constraint.minFrequency = (propMinEl?.value ?? elements.minFreqInput.value).trim();
+        constraint.maxFrequency = (propMaxEl?.value ?? elements.maxFreqInput.value).trim();
+      }
+
+      renderModel(state.model);
+      setStatus('Изменения ограничения применены.');
+    }
+
+    function deleteSelectedConstraint() {
+      const entry = getSelectedConstraintEntry();
+      const constraint = entry?.constraint;
+      if (!constraint) {
+        setStatus('Нет выбранного ограничения для удаления.', true);
+        return;
+      }
+
+      pushHistorySnapshot();
+      if (entry.source === 'internal' && entry.fact) {
+        entry.fact.uniquenessConstraints = (entry.fact.uniquenessConstraints || []).filter((item) => item.id !== constraint.id);
+      } else {
+        state.model.externalConstraints = (state.model.externalConstraints || []).filter((item) => item.id !== constraint.id);
+      }
+      state.model.constraintsCount = Math.max(0, (state.model.constraintsCount || 1) - 1);
+      state.selectedConstraintId = null;
+      renderModel(state.model);
+      setStatus('Ограничение удалено.');
+    }
+
+    function handleGlobalPointerMove(event) {
+      if (state.panInfo) {
+        updateViewportPan(event);
+        return;
+      }
+      if (state.marqueeInfo) {
+        updateMarqueeSelection(event);
+        return;
+      }
+      if (!state.dragInfo || !state.model || !state.diagramTransform) return;
+      const dx = event.clientX - state.dragInfo.startClientX;
+      const dy = event.clientY - state.dragInfo.startClientY;
+      if (!state.dragInfo.started && Math.hypot(dx, dy) < 3) return;
+      if (!state.dragInfo.started) {
+        pushHistorySnapshot();
+        state.dragInfo.started = true;
+      }
+      const scale = state.diagramTransform.scale || 1;
+      const modelDx = dx / scale;
+      const modelDy = dy / scale;
+
+      if (state.dragInfo.kind === 'externalConstraint') {
+        const constraint = (state.model.externalConstraints || []).find((item) => item.id === state.dragInfo.constraintId);
+        if (!constraint) return;
+        const zoomFactor = state.zoom || 1;
+        constraint.editorPosition = {
+          x: state.dragInfo.startPosition.x + dx / zoomFactor,
+          y: state.dragInfo.startPosition.y + dy / zoomFactor
+        };
+      } else if (state.dragInfo.kind === 'internalUniqueness') {
+        const entry = getConstraintEntryById(state.dragInfo.constraintId);
+        if (!entry) return;
+        const deltaLevels = Math.round(-dy / 7);
+        entry.constraint.levelOverride = Math.max(0, state.dragInfo.startLevel + deltaLevels);
+      } else if (state.dragInfo.kind === 'barkerRoleLabel') {
+        const offset = getBarkerRoleLabelOffset(state.model, state.dragInfo.factId, state.dragInfo.sideKey);
+        const zoomFactor = state.zoom || 1;
+        offset.dx = state.dragInfo.startOffset.dx + dx / zoomFactor;
+        offset.dy = state.dragInfo.startOffset.dy + dy / zoomFactor;
+      } else {
+        const shape = findDiagramShapeForDrag(state.dragInfo.kind, state.dragInfo.subjectRef);
+        if (!shape) return;
+        shape.bounds.x = state.dragInfo.startBounds.x + modelDx;
+        shape.bounds.y = state.dragInfo.startBounds.y + modelDy;
+      }
+
+      renderModel(state.model);
+    }
+
+    function handleGlobalPointerUp() {
+      if (state.panInfo) {
+        finishViewportPan();
+        return;
+      }
+      if (state.marqueeInfo) {
+        finishMarqueeSelection();
+        return;
+      }
+      state.dragInfo = null;
+    }
+
+    function startViewportPan(event) {
+      if (event.button !== 0) return;
+      state.panInfo = {
+        started: false,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startScrollLeft: elements.diagramViewport.scrollLeft,
+        startScrollTop: elements.diagramViewport.scrollTop
+      };
+      elements.diagramViewport.classList.add('pan-active');
+    }
+
+    function updateViewportPan(event) {
+      if (!state.panInfo) return;
+      const dx = event.clientX - state.panInfo.startClientX;
+      const dy = event.clientY - state.panInfo.startClientY;
+      if (!state.panInfo.started && Math.hypot(dx, dy) < 3) return;
+      state.panInfo.started = true;
+      elements.diagramViewport.scrollLeft = state.panInfo.startScrollLeft - dx;
+      elements.diagramViewport.scrollTop = state.panInfo.startScrollTop - dy;
+    }
+
+    function finishViewportPan() {
+      const wasPanning = !!state.panInfo?.started;
+      state.panInfo = null;
+      elements.diagramViewport.classList.remove('pan-active');
+      if (wasPanning) state.suppressNextCanvasClick = true;
+    }
+
+    function handleViewportMouseDown(event) {
+      if (event.button !== 0) return;
+      if (!state.model) return;
+      if (event.target.closest && (event.target.closest('#constraintEditor') || event.target.closest('#propertiesPanel'))) return;
+
+      const targetInfo = identifyDiagramTarget(event.target);
+      const isEmptyViewportArea = ['canvas'].includes(targetInfo.kind) || event.target === elements.diagramViewport || event.target === elements.diagramStage || event.target === elements.diagramSvg;
+
+      if (state.editorMode === 'pan') {
+        startViewportPan(event);
+        return;
+      }
+
+      if (state.editorMode === 'select' && isEmptyViewportArea) {
+        if (event.shiftKey) {
+          startMarqueeSelection(event);
+        } else {
+          startViewportPan(event);
+        }
+      }
+    }
+
+    function handleViewportWheel(event) {
+      if (!state.model || !state.lastDiagramMetrics) return;
+      if (event.target.closest && (event.target.closest('#constraintEditor') || event.target.closest('#propertiesPanel'))) return;
+      event.preventDefault();
+
+      const rect = elements.diagramViewport.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const offsetY = event.clientY - rect.top;
+      const oldZoom = state.zoom;
+      const zoomFactor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+      const newZoom = clampZoom(oldZoom * zoomFactor);
+      if (Math.abs(newZoom - oldZoom) < 0.0001) return;
+
+      const contentX = (elements.diagramViewport.scrollLeft + offsetX) / oldZoom;
+      const contentY = (elements.diagramViewport.scrollTop + offsetY) / oldZoom;
+
+      state.zoom = newZoom;
+      applyDiagramZoom();
+
+      elements.diagramViewport.scrollLeft = contentX * newZoom - offsetX;
+      elements.diagramViewport.scrollTop = contentY * newZoom - offsetY;
+    }
+
+    function clampZoom(value) {
+      return Math.min(4, Math.max(0.25, Number(value.toFixed(2))));
+    }
+
+    function startMarqueeSelection(event) {
+      const start = clientToSvgPoint(event);
+      const rect = createSvgElement('rect');
+      rect.setAttribute('x', String(start.x));
+      rect.setAttribute('y', String(start.y));
+      rect.setAttribute('width', '0');
+      rect.setAttribute('height', '0');
+      rect.setAttribute('fill', 'rgba(106, 167, 255, 0.18)');
+      rect.setAttribute('stroke', '#1d5c9f');
+      rect.setAttribute('stroke-dasharray', '4 3');
+      rect.setAttribute('pointer-events', 'none');
+      elements.diagramSvg.appendChild(rect);
+      state.marqueeInfo = {
+        start,
+        current: start,
+        rect
+      };
+    }
+
+    function updateMarqueeSelection(event) {
+      const current = clientToSvgPoint(event);
+      state.marqueeInfo.current = current;
+      const box = normalizedRectFromPoints(state.marqueeInfo.start, current);
+      state.marqueeInfo.rect.setAttribute('x', String(box.x));
+      state.marqueeInfo.rect.setAttribute('y', String(box.y));
+      state.marqueeInfo.rect.setAttribute('width', String(box.w));
+      state.marqueeInfo.rect.setAttribute('height', String(box.h));
+    }
+
+    function finishMarqueeSelection() {
+      const info = state.marqueeInfo;
+      state.marqueeInfo = null;
+      if (!info) return;
+      const box = normalizedRectFromPoints(info.start, info.current);
+      info.rect.remove();
+      const selected = [];
+      elements.diagramSvg.querySelectorAll('[data-element-kind], [data-constraint-id]').forEach((node) => {
+        const bounds = node.getBBox ? node.getBBox() : null;
+        if (!bounds) return;
+        if (!rectsIntersect(box, bounds)) return;
+        if (node.getAttribute('data-constraint-id')) {
+          selected.push({ kind: 'constraint', id: node.getAttribute('data-constraint-id') });
+          return;
+        }
+        selected.push({ kind: node.getAttribute('data-element-kind'), id: node.getAttribute('data-element-id') });
+      });
+      state.multiSelectedElements = dedupeSelectedElements(selected);
+      state.selectedElement = state.multiSelectedElements.length === 1 && state.multiSelectedElements[0].kind !== 'constraint' ? state.multiSelectedElements[0] : null;
+      state.suppressNextCanvasClick = true;
+      state.selectedConstraintId = state.multiSelectedElements.length === 1 && state.multiSelectedElements[0].kind === 'constraint' ? state.multiSelectedElements[0].id : null;
+      renderPropertiesPanel();
+      renderConstraintEditorState();
+      applySearchState();
+    }
+
+    function normalizedRectFromPoints(a, b) {
+      const x = Math.min(a.x, b.x);
+      const y = Math.min(a.y, b.y);
+      const w = Math.abs(a.x - b.x);
+      const h = Math.abs(a.y - b.y);
+      return { x, y, w, h };
+    }
+
+    function rectsIntersect(a, b) {
+      return !(a.x + a.w < b.x || b.x + b.width < a.x || a.y + a.h < b.y || b.y + b.height < a.y);
+    }
+
+    function dedupeSelectedElements(items) {
+      const seen = new Set();
+      return items.filter((item) => {
+        const key = `${item.kind}:${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function findDiagramShapeForDrag(kind, subjectRef) {
+      if (!state.model) return null;
+      if (kind === 'objectShape') return (state.model.diagram.objectShapes || []).find((shape) => shape.subjectRef === subjectRef);
+      if (kind === 'factShape') return (state.model.diagram.factShapes || []).find((shape) => shape.subjectRef === subjectRef);
+      if (kind === 'readingShape') return (state.model.diagram.readingShapes || []).find((shape) => shape.subjectRef === subjectRef);
+      return null;
+    }
+
+    function startShapeDrag(kind, subjectRef, event) {
+      if (!state.model) return;
+      const shape = findDiagramShapeForDrag(kind, subjectRef);
+      if (!shape) return;
+      state.dragInfo = {
+        kind,
+        subjectRef,
+        started: false,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startBounds: { ...shape.bounds }
+      };
+    }
+
+    function startConstraintDrag(constraintId, currentPosition, event) {
+      state.dragInfo = {
+        kind: 'externalConstraint',
+        constraintId,
+        started: false,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startPosition: { ...currentPosition }
+      };
+    }
+
+    function startInternalUniquenessDrag(constraintId, startLevel, event) {
+      state.dragInfo = {
+        kind: 'internalUniqueness',
+        constraintId,
+        started: false,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        startLevel
+      };
+    }
+
+    function getConstraintWizardOptions() {
+      const paths = getSelectionPaths();
+      const selectedRefs = state.selectedRoleRefs.slice();
+      const factIds = [...new Set(selectedRefs.map((roleRef) => state.model?.roleMeta.get(roleRef)?.factId).filter(Boolean))];
+      const mode = elements.constraintEditorMode?.value || 'simple';
+      const options = [];
+
+      if (!selectedRefs.length) return options;
+
+      if (factIds.length === 1) {
+        options.push({ value: 'internalUniqueness', label: 'Внутренняя уникальность' });
+        options.push({ value: 'preferredInternalUniqueness', label: 'Предпочтительная уникальность' });
+      }
+      options.push({ value: 'externalUniqueness', label: 'Внешняя уникальность' });
+      if (selectedRefs.length >= 1) options.push({ value: 'externalMandatory', label: 'Mandatory (IOR)' });
+      if (selectedRefs.length >= 2) options.push({ value: 'xor', label: 'XOR' });
+      if (mode === 'advanced') {
+        if (paths.length >= 2) {
+          options.push({ value: 'subset', label: 'Subset' });
+          options.push({ value: 'equality', label: 'Equality' });
+          options.push({ value: 'exclusion', label: 'Exclusion' });
+        }
+        options.push({ value: 'frequency', label: 'External frequency' });
+      }
+      return options;
+    }
+
+    function renderConstraintEditorState() {
+      const paths = getSelectionPaths();
+      if (!state.model) {
+        elements.selectedRoles.textContent = 'Роли не выбраны.';
+        elements.constraintWizardType.innerHTML = '<option value="">Нет вариантов</option>';
+        elements.constraintWizardHint.textContent = 'Сначала загрузите или создайте модель.';
+        elements.frequencyConfigRow.style.display = 'none';
+        applyRussianTooltips(elements.constraintEditor);
+        return;
+      }
+
+      const selectedConstraint = getSelectedConstraint();
+      if (selectedConstraint) {
+        elements.constraintNameInput.value = selectedConstraint.name || '';
+        elements.preferredConstraintChk.checked = !!selectedConstraint.preferred;
+        const label = selectedConstraint.renderKind || selectedConstraint.type || 'Constraint';
+        elements.selectedRoles.innerHTML = `<span class="selection-chip">Выбрано ограничение: ${escapeHtml(label)}</span>`;
+        elements.constraintWizardHint.textContent = 'Вы выбрали существующее ограничение. Его можно редактировать ниже.';
+        if (selectedConstraint.renderKind === 'FrequencyConstraint') {
+          elements.minFreqInput.value = selectedConstraint.minFrequency || '';
+          elements.maxFreqInput.value = selectedConstraint.maxFrequency || '';
+        } else {
+          elements.minFreqInput.value = '';
+          elements.maxFreqInput.value = '';
+        }
+      } else if (!state.selectedRoleRefs.length) {
+        elements.selectedRoles.textContent = 'Роли не выбраны.';
+        elements.constraintNameInput.value = '';
+        elements.preferredConstraintChk.checked = false;
+        elements.minFreqInput.value = '';
+        elements.maxFreqInput.value = '';
+      } else {
+        const chunks = [];
+        paths.forEach((path, pathIndex) => {
+          path.forEach((roleRef) => {
+            const role = state.model.roleMeta.get(roleRef);
+            const label = role?.name || role?.playerName || roleRef;
+            chunks.push(`<span class="selection-chip">${escapeHtml(label)}</span>`);
+          });
+          if (pathIndex < paths.length - 1) {
+            chunks.push('<span class="selection-break">|</span>');
+          }
+        });
+        if (state.selectionBreaks.includes(state.selectedRoleRefs.length)) {
+          chunks.push('<span class="selection-break">| ...</span>');
+        }
+        elements.selectedRoles.innerHTML = chunks.join('');
+      }
+
+      const options = getConstraintWizardOptions();
+      const previousValue = elements.constraintWizardType.value;
+      elements.constraintWizardType.innerHTML = options.length
+        ? options.map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`).join('')
+        : '<option value="">Нет вариантов</option>';
+      if (options.some((item) => item.value === previousValue)) elements.constraintWizardType.value = previousValue;
+      const selectedType = elements.constraintWizardType.value;
+      elements.frequencyConfigRow.style.display = selectedType === 'frequency' ? 'flex' : 'none';
+      if (!selectedConstraint) {
+        elements.constraintWizardHint.textContent = options.length
+          ? `Выберите тип ограничения и нажмите «Создать ограничение». Доступно вариантов: ${options.length}.`
+          : 'Сначала выберите роли на диаграмме.';
+      }
+      applyRussianTooltips(elements.constraintEditor);
+    }
+
+    function createConstraintFromWizard() {
+      const kind = elements.constraintWizardType.value;
+      if (!kind) {
+        setStatus('Для текущего набора ролей нет доступных ограничений.', true);
+        return;
+      }
+      createDiagramConstraint(kind);
+    }
+
+    function toggleRoleSelection(roleRef) {
+      clearBusinessRuleFocus();
+      state.selectedConstraintId = null;
+      state.selectedElement = null;
+      state.multiSelectedElements = [];
+      const existingIndex = state.selectedRoleRefs.indexOf(roleRef);
+      if (existingIndex >= 0) {
+        state.selectedRoleRefs.splice(existingIndex, 1);
+        state.selectionBreaks = state.selectionBreaks
+          .map((breakIndex) => (breakIndex > existingIndex ? breakIndex - 1 : breakIndex))
+          .filter((breakIndex) => breakIndex > 0 && breakIndex < state.selectedRoleRefs.length);
+      } else {
+        state.selectedRoleRefs.push(roleRef);
+      }
+      renderConstraintEditorState();
+      applyRoleSelectionState();
+    }
+
+    function clearRoleSelection() {
+      clearBusinessRuleFocus();
+      state.selectedRoleRefs = [];
+      state.selectionBreaks = [];
+      state.selectedConstraintId = null;
+      renderConstraintEditorState();
+      applyRoleSelectionState();
+    }
+
+    function addSelectionBreak() {
+      const breakIndex = state.selectedRoleRefs.length;
+      if (breakIndex <= 0) return;
+      if (!state.selectionBreaks.includes(breakIndex)) {
+        state.selectionBreaks.push(breakIndex);
+        state.selectionBreaks.sort((a, b) => a - b);
+      }
+      renderConstraintEditorState();
+    }
+
+    function getSelectionPaths() {
+      if (!state.selectedRoleRefs.length) return [];
+      const normalizedBreaks = [...new Set(state.selectionBreaks)]
+        .filter((value) => value > 0 && value < state.selectedRoleRefs.length)
+        .sort((a, b) => a - b);
+
+      const paths = [];
+      let start = 0;
+      normalizedBreaks.forEach((end) => {
+        paths.push(state.selectedRoleRefs.slice(start, end));
+        start = end;
+      });
+      paths.push(state.selectedRoleRefs.slice(start));
+      return paths.filter((path) => path.length);
+    }
+
+    function applyRoleSelectionState() {
+      const selected = new Set(state.selectedRoleRefs);
+      elements.diagramSvg.querySelectorAll('[data-role-ref]').forEach((node) => {
+        const isSelected = selected.has(node.getAttribute('data-role-ref'));
+        node.setAttribute('fill', isSelected ? '#ffe49b' : '#ffffff');
+        node.setAttribute('stroke', isSelected ? '#8b5a00' : '#1f1f1f');
+        node.setAttribute('stroke-width', isSelected ? '2' : '1.4');
+      });
+      applyElementSelectionState();
+    }
+
+    function applyElementSelectionState() {
+      const multiSelectedSet = new Set((state.multiSelectedElements || []).map((item) => `${item.kind}:${item.id}`));
+      elements.diagramSvg.querySelectorAll('[data-element-kind]').forEach((node) => {
+        const kind = node.getAttribute('data-element-kind');
+        const id = node.getAttribute('data-element-id');
+        const selected = (state.selectedElement && state.selectedElement.kind === kind && state.selectedElement.id === id)
+          || multiSelectedSet.has(`${kind}:${id}`);
+        const businessRuleFocused = !!(state.businessRuleFocusElement && state.businessRuleFocusElement.kind === kind && state.businessRuleFocusElement.id === id);
+        node.querySelectorAll('rect').forEach((rect) => {
+          rect.setAttribute('stroke', businessRuleFocused ? '#ff2f92' : selected ? '#1d5c9f' : '#333333');
+          rect.setAttribute('stroke-width', businessRuleFocused ? '3.4' : selected ? '2.2' : (kind === 'fact' ? '1.4' : '1.5'));
+          if (kind === 'fact') rect.setAttribute('fill', businessRuleFocused ? '#fff0f7' : '#ffffff');
+        });
+      });
+      elements.diagramSvg.querySelectorAll('[data-constraint-id] circle').forEach((circle) => {
+        const group = circle.parentNode;
+        const id = group.getAttribute('data-constraint-id');
+        const selected = state.selectedConstraintId === id || multiSelectedSet.has(`constraint:${id}`);
+        circle.setAttribute('stroke', selected ? '#1d5c9f' : '#111111');
+        circle.setAttribute('stroke-width', selected ? '2' : '1.4');
+      });
+      renderBusinessRuleFocusOverlay();
+    }
+
+    function createDiagramConstraint(kind) {
+      if (!state.model) return;
+      const paths = getSelectionPaths();
+      const selectedRefs = state.selectedRoleRefs.slice();
+      if (!selectedRefs.length) {
+        setStatus('Сначала выберите роли на диаграмме.', true);
+        return;
+      }
+
+      if (kind === 'internalUniqueness' || kind === 'preferredInternalUniqueness') {
+        const factIds = [...new Set(selectedRefs.map((roleRef) => state.model.roleMeta.get(roleRef)?.factId).filter(Boolean))];
+        if (factIds.length !== 1) {
+          setStatus('Internal uniqueness можно добавить только для ролей одного факта.', true);
+          return;
+        }
+        const fact = state.model.factsById.get(factIds[0]);
+        const key = normalizedRoleRefKey(selectedRefs);
+        const exists = (fact.uniquenessConstraints || []).some((constraint) => normalizedRoleRefKey(constraint.roleRefs || []) === key);
+        if (exists) {
+          setStatus('Такой internal uniqueness уже существует.', true);
+          return;
+        }
+        pushHistorySnapshot();
+        const preferred = kind === 'preferredInternalUniqueness';
+        const constraint = {
+          id: generateConstraintId('intuc'),
+          name: preferred ? 'UserPreferredInternalUC' : 'UserInternalUC',
+          roleRefs: selectedRefs,
+          preferred,
+          preferredForRef: preferred ? guessPreferredTargetRef({ fact, constraint: { roleRefs: selectedRefs } }) : '',
+          isInternal: true,
+          isSimple: selectedRefs.length === 1,
+          isImplied: false,
+          type: 'UniquenessConstraint',
+          userCreated: true
+        };
+        fact.uniquenessConstraints.push(constraint);
+        state.model.constraintsCount += 1;
+        state.selectedConstraintId = constraint.id;
+        rerenderAfterConstraintEdit(preferred ? 'Добавлено preferred internal uniqueness.' : 'Добавлено internal uniqueness.');
+        return;
+      }
+
+      const base = {
+        id: generateConstraintId(kind),
+        name: `User${kind}`,
+        roleRefs: selectedRefs,
+        pathGroups: paths,
+        preferred: false,
+        isInternal: false,
+        isSimple: selectedRefs.length === 1,
+        isImplied: false,
+        userCreated: true
+      };
+
+      if (kind === 'externalUniqueness') {
+        base.renderKind = 'ExternalUniqueness';
+        base.type = 'UniquenessConstraint';
+        if (paths.length === 1 && selectedRefs.length > 2) {
+          base.joinPathRoleRefs = paths[0].slice();
+          base.projectedRoleRefs = [paths[0][0], paths[0][paths[0].length - 1]];
+        }
+      } else if (kind === 'externalMandatory') {
+        base.renderKind = 'ExternalMandatory';
+        base.type = 'MandatoryConstraint';
+      } else if (kind === 'xor') {
+        base.renderKind = 'XorConstraint';
+        base.type = 'XorConstraint';
+      } else if (kind === 'subset') {
+        if (paths.length < 2) {
+          setStatus('Для subset нужно минимум два пути. Используйте кнопку «|».', true);
+          return;
+        }
+        base.renderKind = 'SubsetConstraint';
+        base.type = 'SubsetConstraint';
+      } else if (kind === 'equality') {
+        if (paths.length < 2) {
+          setStatus('Для equality нужно минимум два пути. Используйте кнопку «|».', true);
+          return;
+        }
+        base.renderKind = 'EqualityConstraint';
+        base.type = 'EqualityConstraint';
+      } else if (kind === 'exclusion') {
+        if (paths.length < 2) {
+          setStatus('Для exclusion нужно минимум два пути. Используйте кнопку «|».', true);
+          return;
+        }
+        base.renderKind = 'ExclusionConstraint';
+        base.type = 'ExclusionConstraint';
+      } else if (kind === 'frequency') {
+        base.renderKind = 'FrequencyConstraint';
+        base.type = 'FrequencyConstraint';
+        base.minFrequency = elements.minFreqInput.value.trim();
+        base.maxFrequency = elements.maxFreqInput.value.trim();
+      }
+
+      pushHistorySnapshot();
+      state.model.externalConstraints.push(base);
+      state.model.constraintsCount += 1;
+      state.selectedConstraintId = base.id;
+      rerenderAfterConstraintEdit(`Добавлено ограничение: ${base.renderKind}.`);
+    }
+
+    function rerenderAfterConstraintEdit(message) {
+      renderModel(state.model);
+      setStatus(message);
+    }
+
+    function generateConstraintId(prefix) {
+      state.generatedConstraintCounter += 1;
+      return `${prefix}_${state.generatedConstraintCounter}`;
+    }
+
+    function verbalize(template, roleNames) {
+      return (template || '').replace(/\{(\d+)\}/g, (_, index) => roleNames[Number(index)] || `{${index}}`);
+    }
+
+    function resolveRoleName(roleRef, roleMeta, objectById) {
+      const role = roleMeta.get(roleRef);
+      if (!role) return `Role:${roleRef}`;
+      const object = role.playerRef ? objectById.get(role.playerRef) : null;
+      return object?.name || role.name || `Role:${roleRef}`;
+    }
+
+    function collectNotes(objectEl) {
+      const notesEl = firstChildElement(objectEl, 'Notes');
+      if (!notesEl) return [];
+      return Array.from(notesEl.getElementsByTagName('*'))
+        .filter((el) => el.localName === 'Text')
+        .map((el) => el.textContent.trim())
+        .filter(Boolean);
+    }
+
+    function firstChildElement(parent, localName) {
+      if (!parent) return null;
+      return elementChildren(parent).find((el) => el.localName === localName) || null;
+    }
+
+    function firstDescendant(parent, localName) {
+      if (!parent) return null;
+      return Array.from(parent.getElementsByTagName('*')).find((el) => el.localName === localName) || null;
+    }
+
+    function elementChildren(parent) {
+      return parent ? Array.from(parent.children || []) : [];
+    }
+
+    function parseBounds(text) {
+      if (!text) return null;
+      const parts = text.split(',').map((item) => Number(item.trim()));
+      if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) return null;
+      return { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+    }
+
+    function scaledRect(bounds, minX, minY, scale, margin) {
+      return {
+        x: (bounds.x - minX) * scale + margin,
+        y: (bounds.y - minY) * scale + margin,
+        w: bounds.w * scale,
+        h: bounds.h * scale
+      };
+    }
+
+    function normalizedObjectRect(bounds, object, minX, minY, scale, margin) {
+      const base = scaledRect(bounds, minX, minY, scale, margin);
+      const contentWidth = estimateObjectWidth(object);
+      const contentHeight = estimateObjectHeight(object);
+      const w = Math.max(56, contentWidth);
+      const h = Math.max(28, contentHeight);
+      const centerX = base.x + base.w / 2;
+      const centerY = base.y + base.h / 2;
+      return {
+        x: centerX - w / 2,
+        y: centerY - h / 2,
+        w,
+        h
+      };
+    }
+
+    function estimateObjectWidth(object) {
+      const nameText = object?.name || '';
+      const refModesText = diagramRefModesText(object);
+      const refText = refModesText ? `(${refModesText})` : '';
+      const titleWidth = measureTextWidth(nameText, object?.type === 'ValueType' ? '700 13px Tahoma' : '700 14px Tahoma');
+      const refWidth = refText ? measureTextWidth(refText, '11px Tahoma') : 0;
+      const sidePadding = object?.type === 'ValueType' ? 18 : 24;
+      return Math.ceil(Math.max(52, Math.max(titleWidth, refWidth) + sidePadding));
+    }
+
+    function estimateObjectHeight(object) {
+      return objectRefModesText(object) ? 42 : 28;
+    }
+
+    function measureTextWidth(text, font) {
+      if (!measureTextWidth.canvas) {
+        measureTextWidth.canvas = document.createElement('canvas');
+        measureTextWidth.ctx = measureTextWidth.canvas.getContext('2d');
+      }
+      const ctx = measureTextWidth.ctx;
+      ctx.font = font;
+      return ctx.measureText(text || '').width;
+    }
+
+    function layoutRoleBoxes(bounds, roleCount, minX, minY, scale, margin) {
+      const base = scaledRect(bounds, minX, minY, scale, margin);
+      const boxSize = 18;
+      const gap = 1;
+      const innerWidth = roleCount * boxSize + Math.max(0, roleCount - 1) * gap;
+      const totalWidth = Math.max(base.w, innerWidth);
+      const x = base.x + (base.w - totalWidth) / 2;
+      const y = base.y + (base.h - boxSize) / 2;
+      return Array.from({ length: roleCount }).map((_, index) => ({
+        x: x + index * (boxSize + gap),
+        y,
+        w: boxSize,
+        h: boxSize
+      }));
+    }
+
+    function prepareFactUniquenessConstraints(fact, roleOrder) {
+      const roleIndexByRef = new Map();
+      roleOrder.forEach((role, index) => {
+        if (role?.id) roleIndexByRef.set(role.id, index);
+        if (role?.actualRoleId) roleIndexByRef.set(role.actualRoleId, index);
+      });
+
+      const constraints = (fact.uniquenessConstraints || [])
+        .map((constraint) => {
+          const indices = [...new Set(
+            (constraint.roleRefs || [])
+              .map((roleRef) => roleIndexByRef.get(roleRef))
+              .filter((index) => Number.isInteger(index))
+          )].sort((a, b) => a - b);
+
+          return {
+            ...constraint,
+            indices,
+            levelOverride: constraint.levelOverride ?? null
+          };
+        })
+        .filter((constraint) => constraint.indices.length);
+
+      constraints.sort((a, b) => {
+        const aStart = a.indices[0];
+        const bStart = b.indices[0];
+        if (aStart !== bStart) return aStart - bStart;
+        return b.indices.length - a.indices.length;
+      });
+
+      const occupiedByLevel = [];
+      const placeConstraintAtFreeLevel = (constraint, preferredLevel = 0) => {
+        let level = Math.max(0, preferredLevel);
+        while (true) {
+          if (!occupiedByLevel[level]) {
+            occupiedByLevel[level] = [constraint.indices];
+            constraint.level = level;
+            break;
+          }
+          const intersects = occupiedByLevel[level].some((indices) => roleIndexRangesOverlap(indices, constraint.indices));
+          if (!intersects) {
+            occupiedByLevel[level].push(constraint.indices);
+            constraint.level = level;
+            break;
+          }
+          level += 1;
+        }
+      };
+
+      constraints.filter((constraint) => Number.isInteger(constraint.levelOverride) && constraint.levelOverride >= 0)
+        .forEach((constraint) => {
+          placeConstraintAtFreeLevel(constraint, constraint.levelOverride);
+        });
+
+      for (const constraint of constraints) {
+        if (Number.isInteger(constraint.levelOverride) && constraint.levelOverride >= 0) continue;
+        placeConstraintAtFreeLevel(constraint, 0);
+      }
+
+      return constraints;
+    }
+
+    function roleIndexRangesOverlap(aIndices, bIndices) {
+      const aStart = aIndices[0];
+      const aEnd = aIndices[aIndices.length - 1];
+      const bStart = bIndices[0];
+      const bEnd = bIndices[bIndices.length - 1];
+      return !(aEnd < bStart || bEnd < aStart);
+    }
+
+    function drawUniquenessConstraint(layer, constraint, roleBoxes, searchText = '') {
+      if (!constraint?.indices?.length) return;
+
+      const runs = splitConsecutiveIndices(constraint.indices);
+      const baseY = roleBoxes[constraint.indices[0]].y - 6 - ((constraint.level || 0) * 7);
+      const barOffsets = constraint.preferred ? [0, -3] : [0];
+      const startBox = roleBoxes[constraint.indices[0]];
+      const endBox = roleBoxes[constraint.indices[constraint.indices.length - 1]];
+      constraint.renderCenter = {
+        x: (startBox.x + endBox.x + endBox.w) / 2,
+        y: baseY
+      };
+      const group = createSvgElement('g');
+      group.setAttribute('data-kind', 'fact');
+      group.setAttribute('data-search', searchText);
+      group.setAttribute('data-constraint-id', constraint.id);
+      group.setAttribute('data-constraint-source', 'internal-uniqueness');
+      group.setAttribute('data-constraint-tags', 'uniqueness');
+      group.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'ns-resize' : 'pointer';
+      group.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+        if (state.editorMode === 'pan') {
+          startViewportPan(event);
+          return;
+        }
+        if (state.editorMode === 'select' && event.button === 0) {
+          startInternalUniquenessDrag(constraint.id, constraint.level || 0, event);
+        }
+      });
+      group.addEventListener('click', (event) => {
+        event.stopPropagation();
+        selectConstraint(constraint.id);
+      });
+      group.addEventListener('dblclick', (event) => {
+        event.stopPropagation();
+        selectConstraint(constraint.id);
+      });
+
+      const selected = state.selectedConstraintId === constraint.id;
+      const strokeColor = selected ? '#1d5c9f' : '#111111';
+      const strokeWidthMain = selected ? '2.2' : '1.5';
+      const strokeWidthGap = selected ? '1.8' : '1.2';
+
+      for (const offset of barOffsets) {
+        const y = baseY + offset;
+
+        runs.forEach((run) => {
+          const startBox = roleBoxes[run[0]];
+          const endBox = roleBoxes[run[run.length - 1]];
+          const line = createSvgElement('line');
+          line.setAttribute('x1', String(startBox.x + 2));
+          line.setAttribute('y1', String(y));
+          line.setAttribute('x2', String(endBox.x + endBox.w - 2));
+          line.setAttribute('y2', String(y));
+          line.setAttribute('stroke', strokeColor);
+          line.setAttribute('stroke-width', strokeWidthMain);
+          group.appendChild(line);
+        });
+
+        for (let index = 0; index < runs.length - 1; index += 1) {
+          const currentRun = runs[index];
+          const nextRun = runs[index + 1];
+          const currentBox = roleBoxes[currentRun[currentRun.length - 1]];
+          const nextBox = roleBoxes[nextRun[0]];
+          const dottedLine = createSvgElement('line');
+          dottedLine.setAttribute('x1', String(currentBox.x + currentBox.w));
+          dottedLine.setAttribute('y1', String(y));
+          dottedLine.setAttribute('x2', String(nextBox.x));
+          dottedLine.setAttribute('y2', String(y));
+          dottedLine.setAttribute('stroke', strokeColor);
+          dottedLine.setAttribute('stroke-width', strokeWidthGap);
+          dottedLine.setAttribute('stroke-dasharray', '3 3');
+          group.appendChild(dottedLine);
+        }
+      }
+
+      layer.appendChild(group);
+    }
+
+    function splitConsecutiveIndices(indices) {
+      const runs = [];
+      let currentRun = [];
+
+      indices.forEach((index) => {
+        if (!currentRun.length || index === currentRun[currentRun.length - 1] + 1) {
+          currentRun.push(index);
+          return;
+        }
+
+        runs.push(currentRun);
+        currentRun = [index];
+      });
+
+      if (currentRun.length) runs.push(currentRun);
+      return runs;
+    }
+
+    function drawRoleName(group, roleName, boxRect, position = 'top') {
+      const text = createSvgElement('text');
+      const bracketedName = `[${roleName}]`;
+      text.setAttribute('font-size', '11');
+      text.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+      text.setAttribute('fill', '#444444');
+
+      if (position === 'left') {
+        text.setAttribute('x', String(boxRect.x - 4));
+        text.setAttribute('y', String(boxRect.y + boxRect.h / 2 + 4));
+        text.setAttribute('text-anchor', 'end');
+      } else if (position === 'right') {
+        text.setAttribute('x', String(boxRect.x + boxRect.w + 4));
+        text.setAttribute('y', String(boxRect.y + boxRect.h / 2 + 4));
+        text.setAttribute('text-anchor', 'start');
+      } else if (position === 'bottom') {
+        text.setAttribute('x', String(boxRect.x + boxRect.w / 2));
+        text.setAttribute('y', String(boxRect.y + boxRect.h + 13));
+        text.setAttribute('text-anchor', 'middle');
+      } else {
+        text.setAttribute('x', String(boxRect.x + boxRect.w / 2));
+        text.setAttribute('y', String(boxRect.y - 8));
+        text.setAttribute('text-anchor', 'middle');
+      }
+
+      text.textContent = bracketedName;
+      group.appendChild(text);
+    }
+
+    function buildStandaloneRoleAnchor(boxRect) {
+      return {
+        boxRect,
+        center: { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h / 2 },
+        top: { x: boxRect.x + boxRect.w / 2, y: boxRect.y },
+        bottom: { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h },
+        left: { x: boxRect.x, y: boxRect.y + boxRect.h / 2 },
+        right: { x: boxRect.x + boxRect.w, y: boxRect.y + boxRect.h / 2 },
+        objectEnd: null,
+        roleEnd: { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h / 2 },
+        objectRect: null,
+        connectorSide: 'top'
+      };
+    }
+
+    function buildRoleAnchor(boxRect, linePoints, objectRect) {
+      const connectorSide = determineConnectorSide(boxRect, linePoints);
+      return {
+        boxRect,
+        center: { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h / 2 },
+        top: { x: boxRect.x + boxRect.w / 2, y: boxRect.y },
+        bottom: { x: boxRect.x + boxRect.w / 2, y: boxRect.y + boxRect.h },
+        left: { x: boxRect.x, y: boxRect.y + boxRect.h / 2 },
+        right: { x: boxRect.x + boxRect.w, y: boxRect.y + boxRect.h / 2 },
+        objectEnd: { x: linePoints.x1, y: linePoints.y1 },
+        roleEnd: { x: linePoints.x2, y: linePoints.y2 },
+        objectRect,
+        connectorSide
+      };
+    }
+
+    function determineConnectorSide(boxRect, linePoints) {
+      if (Math.abs(linePoints.x2 - boxRect.x) < 0.5) return 'left';
+      if (Math.abs(linePoints.x2 - (boxRect.x + boxRect.w)) < 0.5) return 'right';
+      if (Math.abs(linePoints.y2 - boxRect.y) < 0.5) return 'top';
+      if (Math.abs(linePoints.y2 - (boxRect.y + boxRect.h)) < 0.5) return 'bottom';
+      return 'top';
+    }
+
+    function positionMandatoryDot(roleAnchor, radius = 4.4) {
+      if (!roleAnchor?.roleEnd) return roleAnchor?.center || { x: 0, y: 0 };
+      return {
+        x: roleAnchor.roleEnd.x,
+        y: roleAnchor.roleEnd.y
+      };
+    }
+
+    function renderExternalConstraints(layer, externalConstraints, roleAnchorByRef) {
+      if (!externalConstraints.length) return;
+
+      const placedNodes = [];
+      externalConstraints.forEach((constraint) => {
+        const anchorGroups = getConstraintAnchorGroups(constraint, roleAnchorByRef);
+        const anchors = anchorGroups.flat();
+        if (!anchors.length) return;
+
+        const node = placeExternalConstraintNode(constraint, anchors, placedNodes, anchorGroups);
+        placedNodes.push({ x: node.x, y: node.y, r: node.radius });
+        drawExternalConstraint(layer, constraint, anchorGroups, node, roleAnchorByRef);
+      });
+    }
+
+    function getConstraintAnchorGroups(constraint, roleAnchorByRef) {
+      const groups = [];
+
+      if (constraint.pathGroups?.length) {
+        constraint.pathGroups.forEach((groupRefs) => {
+          const anchors = groupRefs.map((roleRef) => roleAnchorByRef.get(roleRef)).filter(Boolean);
+          if (anchors.length) groups.push(anchors);
+        });
+      }
+
+      if (groups.length) return groups;
+
+      const orderedAnchors = (constraint.roleRefs || []).map((roleRef) => roleAnchorByRef.get(roleRef)).filter(Boolean);
+      if (['SubsetConstraint', 'EqualityConstraint', 'ExclusionConstraint', 'XorConstraint'].includes(constraint.renderKind) && orderedAnchors.length >= 2) {
+        const splitIndex = Math.ceil(orderedAnchors.length / 2);
+        return [orderedAnchors.slice(0, splitIndex), orderedAnchors.slice(splitIndex)].filter((group) => group.length);
+      }
+
+      return orderedAnchors.length ? [orderedAnchors] : [];
+    }
+
+    function placeExternalConstraintNode(constraint, anchors, placedNodes, anchorGroups) {
+      const avgX = anchors.reduce((sum, anchor) => sum + anchor.top.x, 0) / anchors.length;
+      const minY = Math.min(...anchors.map((anchor) => anchor.top.y));
+      const radius = externalConstraintRadius(constraint);
+      let x = constraint.editorPosition?.x ?? avgX;
+      let y = constraint.editorPosition?.y ?? (minY - 28);
+
+      if (!constraint.editorPosition && anchorGroups.length >= 2 && ['SubsetConstraint', 'EqualityConstraint', 'ExclusionConstraint', 'XorConstraint'].includes(constraint.renderKind)) {
+        const leftCenter = anchorGroupCenter(anchorGroups[0]);
+        const rightCenter = anchorGroupCenter(anchorGroups[1]);
+        x = (leftCenter.x + rightCenter.x) / 2;
+        y = Math.min(leftCenter.y, rightCenter.y) - 26;
+      }
+
+      let guard = 0;
+      while (placedNodes.some((node) => Math.hypot(node.x - x, node.y - y) < radius * 2.6) && guard < 20) {
+        y -= 18;
+        guard += 1;
+      }
+
+      return { x, y, radius };
+    }
+
+    function externalConstraintRadius(constraint) {
+      if (constraint.renderKind === 'FrequencyConstraint') {
+        const label = frequencyConstraintLabel(constraint);
+        return Math.max(11, 7 + label.length * 2.2);
+      }
+      return 11;
+    }
+
+    function externalConstraintTags(constraint) {
+      const tags = ['external'];
+      if (constraint.renderKind === 'ExternalUniqueness') tags.push('uniqueness');
+      if (['ExternalMandatory', 'XorConstraint'].includes(constraint.renderKind)) tags.push('mandatory');
+      return tags;
+    }
+
+    function drawExternalConstraint(layer, constraint, anchorGroups, node, roleAnchorByRef) {
+      constraint.renderCenter = { x: node.x, y: node.y };
+      const group = createSvgElement('g');
+      group.setAttribute('data-kind', 'fact');
+      group.setAttribute('data-search', `${constraint.name} ${(constraint.roleRefs || []).join(' ')} ${constraint.renderKind}`.toLowerCase());
+      group.setAttribute('data-constraint-id', constraint.id);
+      group.setAttribute('data-constraint-tags', externalConstraintTags(constraint).join(' '));
+      group.style.cursor = state.editorMode === 'pan' ? 'grab' : state.editorMode === 'select' ? 'move' : 'pointer';
+      group.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+        if (state.editorMode === 'pan') {
+          startViewportPan(event);
+          return;
+        }
+        selectConstraint(constraint.id);
+        if (state.editorMode === 'select') startConstraintDrag(constraint.id, node, event);
+      });
+      group.addEventListener('dblclick', (event) => {
+        event.stopPropagation();
+        if (state.editorMode === 'pan') return;
+        selectConstraint(constraint.id);
+      });
+
+      if (constraint.renderKind === 'ExternalUniqueness' && ((constraint.joinPathRoleRefs && constraint.joinPathRoleRefs.length > 1) || (constraint.roleRefs || []).length > 2)) {
+        drawExternalUniquenessJoinPath(group, constraint, node, roleAnchorByRef);
+      } else if (anchorGroups.length >= 2 && ['SubsetConstraint', 'EqualityConstraint', 'ExclusionConstraint', 'XorConstraint'].includes(constraint.renderKind)) {
+        drawSetComparisonGeometry(group, constraint, anchorGroups, node);
+      } else {
+        drawConstraintBranches(group, constraint, anchorGroups, node);
+      }
+
+      const circle = createSvgElement('circle');
+      circle.setAttribute('cx', String(node.x));
+      circle.setAttribute('cy', String(node.y));
+      circle.setAttribute('r', String(node.radius));
+      circle.setAttribute('fill', '#ffffff');
+      circle.setAttribute('stroke', state.selectedConstraintId === constraint.id ? '#1d5c9f' : '#111111');
+      circle.setAttribute('stroke-width', state.selectedConstraintId === constraint.id ? '2' : '1.4');
+      group.appendChild(circle);
+
+      if (constraint.renderKind === 'ExternalUniqueness') {
+        drawExternalUniquenessSymbol(group, node, constraint.preferred);
+      } else if (constraint.renderKind === 'ExternalMandatory') {
+        drawMandatoryCircleSymbol(group, node);
+      } else if (constraint.renderKind === 'XorConstraint') {
+        drawXorConstraintSymbol(group, node);
+      } else {
+        const symbol = externalConstraintSymbol(constraint);
+        const text = createSvgElement('text');
+        text.setAttribute('x', String(node.x));
+        text.setAttribute('y', String(node.y + 4));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('font-size', constraint.renderKind === 'FrequencyConstraint' ? '10.5' : '13');
+        text.setAttribute('font-family', 'Tahoma, Arial, sans-serif');
+        text.setAttribute('font-weight', '700');
+        text.setAttribute('fill', '#111111');
+        text.textContent = symbol;
+        group.appendChild(text);
+      }
+
+      layer.appendChild(group);
+    }
+
+    function drawConstraintBranches(group, constraint, anchorGroups, node) {
+      anchorGroups.flat().forEach((anchor) => {
+        const targetPoint = pickConstraintTargetPoint(anchor, node);
+        const connector = createSvgElement('line');
+        connector.setAttribute('x1', String(node.x));
+        connector.setAttribute('y1', String(node.y));
+        connector.setAttribute('x2', String(targetPoint.x));
+        connector.setAttribute('y2', String(targetPoint.y));
+        connector.setAttribute('stroke', '#4a4a4a');
+        connector.setAttribute('stroke-width', '1.2');
+        connector.setAttribute('stroke-dasharray', constraint.renderKind === 'ExternalMandatory' ? '2.5 2.5' : '3 3');
+        group.appendChild(connector);
+      });
+    }
+
+    function drawSetComparisonGeometry(group, constraint, anchorGroups, node) {
+      const leftInfo = drawConstraintGroupConnector(group, anchorGroups[0], node, 'left', constraint.renderKind === 'SubsetConstraint');
+      const rightInfo = drawConstraintGroupConnector(group, anchorGroups[1], node, 'right', false, constraint.renderKind === 'SubsetConstraint');
+
+      if (constraint.renderKind === 'SubsetConstraint') {
+        const arrow = createSvgElement('line');
+        arrow.setAttribute('x1', String(leftInfo.trunkX));
+        arrow.setAttribute('y1', String(node.y));
+        arrow.setAttribute('x2', String(rightInfo.trunkX));
+        arrow.setAttribute('y2', String(node.y));
+        arrow.setAttribute('stroke', 'transparent');
+        arrow.setAttribute('stroke-width', '10');
+        group.appendChild(arrow);
+
+        const arrowHead = createSvgElement('path');
+        const tipX = rightInfo.trunkX - 2;
+        const tipY = node.y;
+        arrowHead.setAttribute('d', `M ${tipX - 7} ${tipY - 4} L ${tipX} ${tipY} L ${tipX - 7} ${tipY + 4}`);
+        arrowHead.setAttribute('fill', 'none');
+        arrowHead.setAttribute('stroke', '#4a4a4a');
+        arrowHead.setAttribute('stroke-width', '1.2');
+        group.appendChild(arrowHead);
+      }
+    }
+
+    function drawConstraintGroupConnector(group, anchors, node, side, addArrow = false, isSubset = false) {
+      const center = anchorGroupCenter(anchors);
+      const trunkX = side === 'left' ? node.x - node.radius - 10 : node.x + node.radius + 10;
+      const trunkY = Math.min(...anchors.map((anchor) => anchor.top.y)) - 8;
+
+      const lineToNode = createSvgElement('line');
+      lineToNode.setAttribute('x1', String(node.x + (side === 'left' ? -node.radius : node.radius)));
+      lineToNode.setAttribute('y1', String(node.y));
+      lineToNode.setAttribute('x2', String(trunkX));
+      lineToNode.setAttribute('y2', String(node.y));
+      lineToNode.setAttribute('stroke', '#4a4a4a');
+      lineToNode.setAttribute('stroke-width', '1.2');
+      lineToNode.setAttribute('stroke-dasharray', '3 3');
+      group.appendChild(lineToNode);
+
+      const vertical = createSvgElement('line');
+      vertical.setAttribute('x1', String(trunkX));
+      vertical.setAttribute('y1', String(node.y));
+      vertical.setAttribute('x2', String(trunkX));
+      vertical.setAttribute('y2', String(trunkY));
+      vertical.setAttribute('stroke', '#4a4a4a');
+      vertical.setAttribute('stroke-width', '1.2');
+      vertical.setAttribute('stroke-dasharray', '3 3');
+      group.appendChild(vertical);
+
+      anchors.forEach((anchor) => {
+        const targetPoint = pickConstraintTargetPoint(anchor, { x: trunkX, y: trunkY });
+        const branch = createSvgElement('line');
+        branch.setAttribute('x1', String(trunkX));
+        branch.setAttribute('y1', String(trunkY));
+        branch.setAttribute('x2', String(targetPoint.x));
+        branch.setAttribute('y2', String(targetPoint.y));
+        branch.setAttribute('stroke', '#4a4a4a');
+        branch.setAttribute('stroke-width', '1.2');
+        branch.setAttribute('stroke-dasharray', '3 3');
+        group.appendChild(branch);
+      });
+
+      return { center, trunkX, trunkY };
+    }
+
+    function drawExternalUniquenessJoinPath(group, constraint, node, roleAnchorByRef) {
+      const pathRoleRefs = constraint.joinPathRoleRefs?.length ? constraint.joinPathRoleRefs : (constraint.roleRefs || []);
+      const pathAnchors = pathRoleRefs.map((roleRef) => roleAnchorByRef.get(roleRef)).filter(Boolean);
+      if (!pathAnchors.length) return;
+
+      const projectedRefs = constraint.projectedRoleRefs?.length ? constraint.projectedRoleRefs : [pathRoleRefs[0], pathRoleRefs[pathRoleRefs.length - 1]];
+      const projectedAnchors = projectedRefs.map((roleRef) => roleAnchorByRef.get(roleRef)).filter(Boolean);
+      const startAnchor = projectedAnchors[0] || pathAnchors[0];
+      const endAnchor = projectedAnchors[1] || pathAnchors[pathAnchors.length - 1];
+      const startPoint = pickConstraintTargetPoint(startAnchor, node);
+      const startLine = createSvgElement('line');
+      startLine.setAttribute('x1', String(node.x));
+      startLine.setAttribute('y1', String(node.y));
+      startLine.setAttribute('x2', String(startPoint.x));
+      startLine.setAttribute('y2', String(startPoint.y));
+      startLine.setAttribute('stroke', '#4a4a4a');
+      startLine.setAttribute('stroke-width', '1.2');
+      startLine.setAttribute('stroke-dasharray', '3 3');
+      group.appendChild(startLine);
+
+      const pathPoints = [];
+      pathAnchors.forEach((anchor, index) => {
+        const edgePoint = index === 0 ? startPoint : anchor.center;
+        pathPoints.push(edgePoint);
+        const nextAnchor = pathAnchors[index + 1];
+        if (!nextAnchor) return;
+        if (anchor.objectRect && nextAnchor.objectRect && anchor.objectRect === nextAnchor.objectRect) {
+          pathPoints.push({
+            x: anchor.objectRect.x + anchor.objectRect.w / 2,
+            y: anchor.objectRect.y + anchor.objectRect.h / 2
+          });
+        }
+      });
+
+      const polyline = createSvgElement('polyline');
+      polyline.setAttribute('points', pathPoints.map((point) => `${point.x},${point.y}`).join(' '));
+      polyline.setAttribute('fill', 'none');
+      polyline.setAttribute('stroke', '#4a4a4a');
+      polyline.setAttribute('stroke-width', '1.1');
+      polyline.setAttribute('stroke-dasharray', '3 3');
+      group.appendChild(polyline);
+
+      if (endAnchor !== startAnchor) {
+        const endPoint = pickConstraintTargetPoint(endAnchor, node);
+        const endLine = createSvgElement('line');
+        endLine.setAttribute('x1', String(node.x));
+        endLine.setAttribute('y1', String(node.y));
+        endLine.setAttribute('x2', String(endPoint.x));
+        endLine.setAttribute('y2', String(endPoint.y));
+        endLine.setAttribute('stroke', '#4a4a4a');
+        endLine.setAttribute('stroke-width', '1.2');
+        endLine.setAttribute('stroke-dasharray', '3 3');
+        group.appendChild(endLine);
+      }
+    }
+
+    function anchorGroupCenter(anchors) {
+      return {
+        x: anchors.reduce((sum, anchor) => sum + anchor.center.x, 0) / anchors.length,
+        y: anchors.reduce((sum, anchor) => sum + anchor.center.y, 0) / anchors.length
+      };
+    }
+
+    function drawExternalUniquenessSymbol(group, node, preferred = false) {
+      const offsets = preferred ? [-2.2, 2.2] : [0];
+      offsets.forEach((offset) => {
+        const line = createSvgElement('line');
+        line.setAttribute('x1', String(node.x - 5.5));
+        line.setAttribute('y1', String(node.y + offset));
+        line.setAttribute('x2', String(node.x + 5.5));
+        line.setAttribute('y2', String(node.y + offset));
+        line.setAttribute('stroke', '#111111');
+        line.setAttribute('stroke-width', '1.4');
+        group.appendChild(line);
+      });
+    }
+
+    function drawMandatoryCircleSymbol(group, node) {
+      const dot = createSvgElement('circle');
+      dot.setAttribute('cx', String(node.x));
+      dot.setAttribute('cy', String(node.y));
+      dot.setAttribute('r', '4.2');
+      dot.setAttribute('fill', '#111111');
+      group.appendChild(dot);
+    }
+
+    function drawXorConstraintSymbol(group, node) {
+      const x1 = createSvgElement('line');
+      x1.setAttribute('x1', String(node.x - 4.8));
+      x1.setAttribute('y1', String(node.y - 4.8));
+      x1.setAttribute('x2', String(node.x + 4.8));
+      x1.setAttribute('y2', String(node.y + 4.8));
+      x1.setAttribute('stroke', '#111111');
+      x1.setAttribute('stroke-width', '1.4');
+      group.appendChild(x1);
+
+      const x2 = createSvgElement('line');
+      x2.setAttribute('x1', String(node.x - 4.8));
+      x2.setAttribute('y1', String(node.y + 4.8));
+      x2.setAttribute('x2', String(node.x + 4.8));
+      x2.setAttribute('y2', String(node.y - 4.8));
+      x2.setAttribute('stroke', '#111111');
+      x2.setAttribute('stroke-width', '1.4');
+      group.appendChild(x2);
+
+      const dot = createSvgElement('circle');
+      dot.setAttribute('cx', String(node.x));
+      dot.setAttribute('cy', String(node.y));
+      dot.setAttribute('r', '3.2');
+      dot.setAttribute('fill', '#111111');
+      group.appendChild(dot);
+    }
+
+    function pickConstraintTargetPoint(anchor, node) {
+      const candidates = [anchor.top, anchor.bottom, anchor.left, anchor.right, anchor.center].filter(Boolean);
+      return candidates.reduce((best, point) => {
+        if (!best) return point;
+        const bestDistance = Math.hypot(best.x - node.x, best.y - node.y);
+        const pointDistance = Math.hypot(point.x - node.x, point.y - node.y);
+        return pointDistance < bestDistance ? point : best;
+      }, null);
+    }
+
+    function externalConstraintSymbol(constraint) {
+      if (constraint.renderKind === 'ExclusionConstraint') return '×';
+      if (constraint.renderKind === 'EqualityConstraint') return '=';
+      if (constraint.renderKind === 'SubsetConstraint') return '⊆';
+      if (constraint.renderKind === 'FrequencyConstraint') return frequencyConstraintLabel(constraint);
+      return '?';
+    }
+
+    function frequencyConstraintLabel(constraint) {
+      const min = String(constraint.minFrequency || '').trim();
+      const max = String(constraint.maxFrequency || '').trim();
+      if (min && max && min === max) return min;
+      if (min && max) return `${min}..${max}`;
+      if (min) return `≥${min}`;
+      if (max) return `≤${max}`;
+      return '#';
+    }
+
+    function connectObjectToRole(objectRect, roleRect) {
+      const objectCenter = { x: objectRect.x + objectRect.w / 2, y: objectRect.y + objectRect.h / 2 };
+      const roleCenter = { x: roleRect.x + roleRect.w / 2, y: roleRect.y + roleRect.h / 2 };
+      let x1 = objectCenter.x;
+      let y1 = objectCenter.y;
+      let x2 = roleCenter.x;
+      let y2 = roleCenter.y;
+
+      if (Math.abs(roleCenter.x - objectCenter.x) > Math.abs(roleCenter.y - objectCenter.y)) {
+        x1 = roleCenter.x > objectCenter.x ? objectRect.x + objectRect.w : objectRect.x;
+        y1 = objectCenter.y;
+        x2 = roleCenter.x > objectCenter.x ? roleRect.x : roleRect.x + roleRect.w;
+        y2 = roleCenter.y;
+      } else {
+        x1 = objectCenter.x;
+        y1 = roleCenter.y > objectCenter.y ? objectRect.y + objectRect.h : objectRect.y;
+        x2 = roleCenter.x;
+        y2 = roleCenter.y > objectCenter.y ? roleRect.y : roleRect.y + roleRect.h;
+      }
+
+      return { x1, y1, x2, y2 };
+    }
+
+    function defaultReadingRect(roleBoxes) {
+      const left = roleBoxes[0];
+      const right = roleBoxes[roleBoxes.length - 1];
+      return {
+        x: left.x - 110,
+        y: left.y + 28,
+        w: (right.x + right.w) - left.x + 220,
+        h: 20
+      };
+    }
+
+    function objectFill(type) {
+      if (type === 'ValueType') return '#fff8da';
+      if (type === 'ObjectifiedType') return '#f2e9ff';
+      return '#eaf3ff';
+    }
+
+    function searchableObjectText(object) {
+      return [object.name, objectRefModesText(object), object.type, ...(object.notes || [])].filter(Boolean).join(' ');
+    }
+
+    function searchableFactText(fact) {
+      return [
+        fact.name,
+        fact.type,
+        ...fact.roles.map((role) => role.playerName),
+        ...fact.roles.map((role) => role.name),
+        ...fact.readings.flatMap((order) => order.readings.map((reading) => reading.verbalized || reading.template || ''))
+      ].filter(Boolean).join(' ');
+    }
+
+    function shortenText(text, maxLength) {
+      if (!text || text.length <= maxLength) return text || '';
+      return `${text.slice(0, maxLength - 1)}…`;
+    }
+
+    function createSvgElement(name) {
+      return document.createElementNS(svgNs, name);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    clearUi();
+    setupSettingsAccordionDragAndDrop();
+    applyRussianTooltips();
+  
